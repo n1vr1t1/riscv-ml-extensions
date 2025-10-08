@@ -10,9 +10,9 @@ pow:
         addi    a5,a5,1 -- i++
         mul     a4,a4,a0 -- result*=base
         bne     a5,a3,.L3 --if i!=exponent, perf last two instructions
-        blt     a1,x0,.L9 --if exponent<0
+        blt     a1,x0,.L7 --if exponent<0
         beq     x0,x0,.L5
-.L9:
+.L7:
         addi    a5,x0,1
         div     a4,a5,a4
 .L5:
@@ -30,7 +30,7 @@ neuron:
         add     a4,x0,x0 --i=0
         fadd.s  fa7, x0,x0
         bge     a4,a3,.L2 -- if i>=input_size then exit loop 
-.L3:
+.L1:
         add     a5,x0,x0
         add     a6,x0,x0
         slli    a5,a4,2 --i*4
@@ -42,7 +42,7 @@ neuron:
         fmul.s  fa5,fa4,fa5 -- weights[i] * inputs[i]
         fadd.s  fa7,fa4,fa5 -- accumulator += fa5
         addi    a4,a4,1 --i+=1
-        blt     a4,a3,.L3 -- if i<input_size then continue loop else exit it 
+        blt     a4,a3,.L1 -- if i<input_size then continue loop else exit it 
 .L2:
         fadd.s  fa7,fa7,fa0 --adding bias
         fadd.s  fa0,fa5, x0 --moving the vlaue to the return register
@@ -329,8 +329,6 @@ tree_inference:
 .LC1:
         .word   0
         .word   1072693248
-.LC2:
-        .string "%d "
 main:
         addi    sp,sp,-2032
         sw      ra,2028(sp)
@@ -377,3 +375,20 @@ main:
         lw      s3,2012(sp)
         addi    sp,sp,2032
         jr      ra
+	.set    .LANCHOR1,. + 0
+NODE_BIASES:
+        .zero   60
+LEAF_OUTPUT_BIASES:
+        .zero   2048
+LEAF_HIDDEN_BIASES:
+        .zero   2048
+LEAF_OUTPUT_WEIGHTS:
+        .zero   20480
+LEAF_HIDDEN_WEIGHTS:
+        .zero   1605632
+NODE_WEIGHTS:
+        .zero   47040
+-------------------
+.LC2:
+        .string "%d "
+        
