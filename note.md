@@ -1,0 +1,1 @@
+- NOP is encoded as ADDI x0, x0, 0.
