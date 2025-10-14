@@ -1,1 +1,2 @@
 - NOP is encoded as ADDI x0, x0, 0.
+- LUI = [-524288, 524287]
