@@ -1,6 +1,3 @@
-[submodule "vhdl/riscv"]
-	path = vhdl/riscv
-	url = https://github.com/n1vr1t1/RiscV.git
 [submodule "riscv"]
 	path = riscv
 	url = https://github.com/n1vr1t1/RiscV.git
