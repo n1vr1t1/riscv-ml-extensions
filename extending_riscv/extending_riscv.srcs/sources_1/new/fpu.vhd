@@ -1,10 +1,10 @@
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use ieee.math_real.all;
 
 entity fpu is
-  Port (clk: in std_logic;
-        fp : in std_logic;
+  Port (fp : in std_logic;
         opcode : in STD_LOGIC_VECTOR (1 downto 0);
         operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
         operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
@@ -12,132 +12,107 @@ entity fpu is
 end fpu;
 
 architecture Behavioral of fpu is
-COMPONENT fp_add_sub
-  PORT (
-    aclk : IN STD_LOGIC;
-    s_axis_a_tvalid : IN STD_LOGIC;
-    s_axis_a_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-    s_axis_b_tvalid : IN STD_LOGIC;
-    s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-    s_axis_operation_tvalid : IN STD_LOGIC;
-    s_axis_operation_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-    m_axis_result_tvalid : OUT STD_LOGIC;
-    m_axis_result_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0) 
-  );
-END COMPONENT;
-COMPONENT fp_mul
-  PORT (
-    aclk : IN STD_LOGIC;
-    s_axis_a_tvalid : IN STD_LOGIC;
-    s_axis_a_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-    s_axis_b_tvalid : IN STD_LOGIC;
-    s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-    m_axis_result_tvalid : OUT STD_LOGIC;
-    m_axis_result_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0) 
-  );
-END COMPONENT;
 
-signal add_sub_op1_tvalid : std_logic;
-signal add_sub_op2_tvalid : std_logic;
-signal add_sub_opcode : std_logic_vector(7 downto 0);
-signal add_sub_operation_tvalid : std_logic;
-signal add_sub_result_tvalid : std_logic;
-signal add_sub_result : std_logic_vector(31 downto 0);
+  -- Correct IEEE 754 to real conversion
+    function flt_to_real(x : std_logic_vector(31 downto 0)) return real is
+        variable sign      : real;
+        variable exponent  : integer;
+        variable frac      : real;
+        variable div : real;
+        variable result    : real;
+    begin
+        exponent := to_integer(unsigned(x(30 downto 23)));
+        frac := 1.0;
+        div := 0.5;
+        
+        if exponent = 0 or exponent = 255 then
+            result := 0.0;
+            return result;
+        end if;
+        
+        for i in 0 to 22 loop
+            if x(22 - i) = '1' then
+                frac := frac + div;
+            end if;
+            div := div / 2.0;
+        end loop;
+        
+        if x(31) = '1' then
+            sign := -1.0;
+        else
+            sign := 1.0;
+        end if;
+        
+        result := sign * frac * (2.0 ** real(exponent - 127));
+        
+        frac := 0.0;
+        return result;
+    end function;
 
-signal mul_op1_tvalid : std_logic;
-signal mul_op2_tvalid : std_logic;
-signal mul_result_tvalid : std_logic;
-signal multiplication_result : std_logic_vector(31 downto 0);
+    -- Correct real to IEEE 754 conversion (normal numbers only)
+    function real_to_flt(x : real) return std_logic_vector is
+        variable result   : std_logic_vector(31 downto 0) := (others => '0');
+        variable exp     : integer;
+        variable mant    : real;
+        variable mant_int : integer;
+--        constant MANT_MAX : real    := 2.0 - (1.0 / real(2 ** (23)));
+    begin
+        if x < 0.0 then
+            result(31) := '1';
+            mant := -x;
+        else
+            result(31) := '0';
+            mant := x;
+        end if;
+        
+        if mant = 0.0 then
+            result(30 downto 0) := (others => '0');
+        else
+        
+--            exp := 0;
+            
+--            while 
+            while mant < 1.0 loop
+              exp  := exp - 1;
+              mant := mant * 2.0;
+            end loop;
+            while mant > 2.0 loop
+              exp  := exp + 1;
+              mant := mant / 2.0;
+            end loop;
+    
+            mant := mant - 1.0;
+            mant_int := integer(mant * real(2 ** (23)));  -- implicit round-to-nearest
+            result(22 downto 0) := std_logic_vector(to_unsigned(mant_int, 23));
+    
+            exp := exp + 127;
+            result(30 downto 23) := std_logic_vector(to_unsigned(exp, 8));
+        end if;
+
+        return result;
+    end function;
+
 begin
 
-addition_subtraction : fp_add_sub
-  PORT MAP (
-    aclk => clk,
-    s_axis_a_tvalid => add_sub_op1_tvalid,
-    s_axis_a_tdata => operand_1,
-    s_axis_b_tvalid => add_sub_op2_tvalid,
-    s_axis_b_tdata => operand_2,
-    s_axis_operation_tvalid => add_sub_operation_tvalid,
-    s_axis_operation_tdata => add_sub_opcode,
-    m_axis_result_tvalid => add_sub_result_tvalid,
-    m_axis_result_tdata => add_sub_result
-  );
-
-multiplication : fp_mul
-  PORT MAP (
-    aclk => clk,
-    s_axis_a_tvalid => mul_op1_tvalid,
-    s_axis_a_tdata => operand_1,
-    s_axis_b_tvalid => mul_op2_tvalid,
-    s_axis_b_tdata => operand_2,
-    m_axis_result_tvalid => mul_result_tvalid,
-    m_axis_result_tdata => multiplication_result
-  );
-
-process (fp, opcode) begin
-    if fp ='1' then
+process (fp, opcode, operand_1, operand_2)
+    variable A_fp, B_fp, result_fp : real;
+begin
+    if fp ='1' then 
+        A_fp := flt_to_real(operand_1);
+        B_fp := flt_to_real(operand_2);
         if opcode = "00" then -- add
-            add_sub_opcode <= "00000000";
-            add_sub_op1_tvalid <= '1';
-            add_sub_op2_tvalid <= '1';
-            add_sub_operation_tvalid <= '1';
-            mul_op1_tvalid <= '0';
-            mul_op2_tvalid <= '0';
-        elsif opcode ="01" then -- sub
-            add_sub_opcode <= "00000001";
-            add_sub_op1_tvalid <= '1';
-            add_sub_op2_tvalid <= '1';
-            add_sub_operation_tvalid <= '1';
-            mul_op1_tvalid <= '0';
-            mul_op2_tvalid <= '0';
-        elsif opcode = "10" then -- mul
-            add_sub_opcode <= "00000000";
-            add_sub_op1_tvalid <= '0';
-            add_sub_op2_tvalid <= '0';
-            add_sub_operation_tvalid <= '0';
-            mul_op1_tvalid <= '1';
-            mul_op2_tvalid <= '1';
+            result_fp := A_fp + B_fp;
+        elsif opcode = "01" then -- sub
+            result_fp := A_fp - B_fp;
+        elsif opcode = "10" then --mul
+            result_fp := A_fp * B_fp;
         else
-            add_sub_opcode <= "00000000";
-            add_sub_op1_tvalid <= '0';
-            add_sub_op2_tvalid <= '0';
-            add_sub_operation_tvalid <= '0';
-            mul_op1_tvalid <= '0';
-            mul_op2_tvalid <= '0';
+            result_fp := 0.0;
         end if;
-    else
-        add_sub_opcode <= "00000000";
-        add_sub_op1_tvalid <= '0';
-        add_sub_op2_tvalid <= '0';
-        add_sub_operation_tvalid <= '0';
-        mul_op1_tvalid <= '0';
-        mul_op2_tvalid <= '0';
+        output <= real_to_flt(result_fp);
+     else
+        output <= (others => '0');
     end if;
 end process;
-
-output <= add_sub_result when add_sub_result_tvalid = '1';
-output <= multiplication_result when mul_result_tvalid = '1';
-
---add_sub_result_process : process (add_sub_result_tvalid) begin
---    if opcode = "00" or opcode = "01" then
---        if add_sub_result_tvalid = '1' then
---            output <= add_sub_result;
---            add_sub_op1_tvalid <= '0';
---            add_sub_op2_tvalid <= '0';
---            add_sub_operation_tvalid <= '0';
---        end if;
---    end if;
---end process;
-
---mul_result_process : process (mul_result_tvalid) begin
---    if opcode = "10" then
---        if mul_result_tvalid = '1' then
---            output <= multiplication_result;
---            mul_op1_tvalid <= '0';
---            mul_op2_tvalid <= '0';
---        end if;
---    end if;
---end process;
-
 
 end Behavioral;
