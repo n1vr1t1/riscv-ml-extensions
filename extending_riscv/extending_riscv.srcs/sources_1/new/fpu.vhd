@@ -68,10 +68,6 @@ architecture Behavioral of fpu is
         if mant = 0.0 then
             result(30 downto 0) := (others => '0');
         else
-        
---            exp := 0;
-            
---            while 
             while mant < 1.0 loop
               exp  := exp - 1;
               mant := mant * 2.0;

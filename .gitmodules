@@ -1,3 +1,0 @@
-[submodule "riscv"]
-	path = riscv
-	url = https://github.com/n1vr1t1/RiscV.git

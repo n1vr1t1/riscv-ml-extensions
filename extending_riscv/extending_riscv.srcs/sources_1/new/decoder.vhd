@@ -169,6 +169,7 @@ process (rst, clk) begin
                 ml_opcode <= '0';
                 
 			elsif op_code = "1010011" then -- f operations
+			    op_class <= "00100";
 			    a_select <= '0';
 			    b_select <= '0';
 			    f_op <= '1';
