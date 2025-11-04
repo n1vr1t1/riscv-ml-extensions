@@ -42,15 +42,25 @@ reading :  process (rst, clk) begin
         rd_data_out <= (others => '0');
     elsif rising_edge(clk) then 
 --    elsif rising_edge(clk) and stall = '0' then
-      if en='0' then 
-        r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
-  		r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
-  		rd_data_out <= reg_file( to_integer( unsigned( rd_out ) ) );
-  	  else -- if enable is '1'  the outputs are flushed
-  		r1_data<=(others =>'0');
-  		r2_data<=(others =>'0');
-  		rd_data_out <= (others => '0');
-  	  end if;
+        case en is
+            when '0' =>
+                r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
+                r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
+                rd_data_out <= reg_file( to_integer( unsigned( rd_out ) ) );
+            when others =>
+                r1_data<=(others =>'0');
+                r2_data<=(others =>'0');
+                rd_data_out <= (others => '0');
+        end case;
+--      if en='0' then 
+--        r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
+--  		r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
+--  		rd_data_out <= reg_file( to_integer( unsigned( rd_out ) ) );
+--  	  else -- if enable is '1'  the outputs are flushed
+--  		r1_data<=(others =>'0');
+--  		r2_data<=(others =>'0');
+--  		rd_data_out <= (others => '0');
+--  	  end if;
   	end if;
 end process;
 -- Writing process

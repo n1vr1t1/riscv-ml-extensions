@@ -72,11 +72,15 @@ pc_sign_extension: sign_extention_pc
 		extended_pc => pc_out);
 process (branch_pc , program_counter_out, branch_condition) begin
     enable<=not(branch_condition);
-	if branch_condition = '1' then
-        program_counter_in <= branch_pc;
-    else 
-  	    program_counter_in <= std_logic_vector(unsigned(program_counter_out) + 4);
-  	end if;
+    case branch_condition is
+    when '1' => program_counter_in <= branch_pc;
+    when others => program_counter_in <= std_logic_vector(unsigned(program_counter_out) + 4);
+    end case;
+--	if branch_condition = '1' then
+--        program_counter_in <= branch_pc;
+--    else 
+--  	    program_counter_in <= std_logic_vector(unsigned(program_counter_out) + 4);
+--  	end if;
 end process;
 process (rst, clk) begin
     if rst = '0' then 
@@ -86,10 +90,16 @@ process (rst, clk) begin
     end if;
 end process;
 process (instruction_flush, instruction_signal) begin
-    if instruction_flush = '1' then
-        instruction <= (others => '0');
-    else 
-        instruction <= instruction_signal;
-    end if;
+
+    case instruction_flush is
+    when '1' => instruction <= (others => '0');
+    when others => instruction <= instruction_signal;
+    end case;
+    
+--    if instruction_flush = '1' then
+--        instruction <= (others => '0');
+--    else 
+--        instruction <= instruction_signal;
+--    end if;
 end process;
 end Behavioral;

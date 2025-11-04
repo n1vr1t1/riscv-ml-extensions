@@ -41,7 +41,6 @@ process (rst, clk) begin
         ml_op <= '0';
         ml_opcode <= '0';
 		conditional_opcode  <= (others => '1');
---	elsif rising_edge(clk) and stall = '0' then
     elsif rising_edge(clk) then 
 	   if flush = '1' then
             op_class <= (others => '0');
@@ -52,7 +51,7 @@ process (rst, clk) begin
             ml_op <= '0';
             ml_opcode <= '0';
 			conditional_opcode  <= (others => '1');
-	   else --flush, (stall) and rst not enabled
+	   else
 			conditional_opcode <= "111"; --default for when we dont have a branch instruction
 			if op_code = "0000011" or op_code = "0100111" then -- load for int and floats
 				op_class <= "00001";

@@ -86,7 +86,7 @@ nonconsecutive_data_forwardind : process (rst, clk) begin
                 data_hazard_1 <= '0';
                 data_hazard_2 <= '0';
             end if;   
-        else --when destination ="00000" 
+        else --when destination = "00000" 
             load_hazard_1 <= '0';
             load_hazard_2 <= '0';
             data_hazard_1 <= '0';

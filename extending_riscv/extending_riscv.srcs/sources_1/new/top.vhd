@@ -152,19 +152,26 @@ signal opclass_id_ex : STD_LOGIC_VECTOR (4 downto 0);
 signal alu_opcode_id_ex : STD_LOGIC_VECTOR (2 downto 0);
 signal a_select_id_ex : STD_LOGIC;
 signal b_select_id_ex : STD_LOGIC;
+signal is_float_id_ex : STD_LOGIC;
+signal is_ml_id_ex : STD_LOGIC;
+signal ml_opcode_id_ex : STD_LOGIC;
 signal conditional_opcode_id_ex : STD_LOGIC_VECTOR (2 downto 0);
 signal destination_address_id_ex : STD_LOGIC_VECTOR(4 DOWNTO 0);
 signal s_value_1_id : STD_LOGIC_VECTOR (31 downto 0);
 signal s_value_2_id : STD_LOGIC_VECTOR (31 downto 0);
+signal s_value_3_id : STD_LOGIC_VECTOR (31 downto 0);
 
 --signals from execute 
 signal alu_output_ex : STD_LOGIC_VECTOR (31 downto 0);
+signal mlu_output_ex : STD_LOGIC_VECTOR (31 downto 0);
+signal fpu_output_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal branch_condition_ex_control : std_logic;
 signal destination_address_out_ex :  STD_LOGIC_VECTOR (4 downto 0);
 signal pc_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal opclass_out_ex : STD_LOGIC_VECTOR (4 downto 0);
 signal s_value_1_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal s_value_2_ex : STD_LOGIC_VECTOR (31 downto 0);
+signal s_value_3_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal value_2_ex_display : STD_LOGIC_VECTOR (15 downto 0);
 
 --signals connected to data memory
@@ -191,12 +198,15 @@ signal write_enable_wb_id : std_logic;
 --signals connected to control unit
 signal opclass_control : STD_LOGIC_VECTOR (4 downto 0);
 signal flush_control : std_logic;
-signal load_hazard_1_control_ex : std_logic ;
-signal load_hazard_2_control_ex : std_logic ;
-signal consecutive_data_hazard_1_control : std_logic ;
-signal consecutive_data_hazard_2_control : std_logic ;
-signal non_consecutive_data_hazard_1_control : std_logic ;
-signal non_consecutive_data_hazard_2_control : std_logic ;
+signal load_hazard_1_control_ex : std_logic;
+signal load_hazard_2_control_ex : std_logic;
+signal load_hazard_3_control_ex : std_logic;
+signal consecutive_data_hazard_1_control : std_logic;
+signal consecutive_data_hazard_2_control : std_logic;
+signal consecutive_data_hazard_3_control : std_logic;
+signal non_consecutive_data_hazard_1_control : std_logic;
+signal non_consecutive_data_hazard_2_control : std_logic;
+signal non_consecutive_data_hazard_3_control : std_logic;
 
 --signals in between instruction decode and control unit
 signal source_1_id_control : std_logic_vector(4 downto 0);
@@ -243,10 +253,10 @@ id_stage: instruction_decode
         is_float => is_float_id_ex,
         is_ml => is_ml_id_ex,
         ml_opcode => ml_opcode_id_ex);
-exe : execution_stage
+exe_stage : execution_stage
     Port map(clk => clk,
         rst => rst,
-        flush => flush,
+        flush => flush_control,
         value_1 => s_value_1_ex,
         value_2 => s_value_2_ex,
         value_3 => s_value_3_ex,
@@ -254,41 +264,9 @@ exe : execution_stage
         pc => pc_id_ex,
         a_select => a_select_id_ex,
         b_select => b_select_id_ex,
-        c_select => c_select_control_ex,
         a2_select => load_hazard_1_control_ex,
         b2_select => load_hazard_2_control_ex,
-        memory_value => mem_out_wb, ---input from the output of the data memory
-       	immediate => immediate_id_ex,
-        alu_opcode => alu_opcode_id_ex,
-        opclass_in => opclass_id_ex, 
-        opclass_out => opclass_out,
-        value_1_forward => value_1_forward,
-        value_2_forward => value_2_forward,
-        a_select_forward => a_select_forward ,
-        b_select_forward => b_select_forward,
-        d_in => destination_address_id_ex,
-        d_out => d_out,
-        branch_condition => branch_condition,
-        pc_out =>pc_out,
-        alu_output => alu_output,
-        ml_opcode => ml_opcode_id_ex,
-        is_float => is_float_id_ex,
-        is_ml => is_ml_id_ex,
-        fpu_output => fpu_output,
-        mlu_output => mlu_output);
-
-exe_stage : execution_stage
-    Port map(clk => clk,
-        rst => rst,
-        stall =>flush_control,
-        value_1 => s_value_1_ex,
-        value_2 => s_value_2_ex,
-        conditional_opcode => conditional_opcode_id_ex,
-        pc => pc_id_ex,
-        a_select => a_select_id_ex,
-        b_select => b_select_id_ex,
-        a2_select => load_hazard_1_control_ex,
-        b2_select => load_hazard_2_control_ex,
+        c_select => load_hazard_3_control_ex,
         memory_value => mem_out_wb, ---input from the output of the data memory
        	immediate => immediate_id_ex,
         alu_opcode => alu_opcode_id_ex,
@@ -302,7 +280,13 @@ exe_stage : execution_stage
         d_out => destination_address_out_ex,
         branch_condition => branch_condition_ex_control,
         pc_out =>pc_ex,
-        alu_output => alu_output_ex);
+        alu_output => alu_output_ex,
+        ml_opcode => ml_opcode_id_ex,
+        is_float => is_float_id_ex,
+        is_ml => is_ml_id_ex,
+        fpu_output => fpu_output_ex,
+        mlu_output => mlu_output_ex);
+
 stage_dm : data_memory
    	PORT MAP ( clka => clk ,
     	wea(0) => write_enable_dm,
@@ -424,6 +408,16 @@ data_hazards_2 : process ( s_value_2_id, consecutive_data_hazard_2_control , alu
 		s_value_2_ex <= alu_output_ex;
 	else 
 	 	s_value_2_ex <= s_value_2_id;
+	 end if;
+end process;
+data_hazards_3 : process ( s_value_3_id, consecutive_data_hazard_3_control , alu_output_ex ,
+                           non_consecutive_data_hazard_3_control, destination_value_wb_id ) begin
+	if non_consecutive_data_hazard_3_control = '1' then 
+        s_value_3_ex <= destination_value_wb_id;
+	elsif consecutive_data_hazard_3_control ='1' then 
+		s_value_3_ex <= alu_output_ex;
+	else 
+	 	s_value_3_ex <= s_value_3_id;
 	 end if;
 end process;
 end Behavioral;

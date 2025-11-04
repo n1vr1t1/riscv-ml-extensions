@@ -14,7 +14,7 @@ end fpu;
 architecture Behavioral of fpu is
 
   -- Correct IEEE 754 to real conversion
-    function flt_to_real(x : std_logic_vector(31 downto 0)) return real is
+    function flt_to_real( x : std_logic_vector( 31 downto 0 ) ) return real is
         variable sign      : real;
         variable exponent  : integer;
         variable frac      : real;
@@ -50,7 +50,7 @@ architecture Behavioral of fpu is
     end function;
 
     -- Correct real to IEEE 754 conversion (normal numbers only)
-    function real_to_flt(x : real) return std_logic_vector is
+    function real_to_flt( x : real ) return std_logic_vector is
         variable result   : std_logic_vector(31 downto 0) := (others => '0');
         variable exp     : integer;
         variable mant    : real;
@@ -96,18 +96,28 @@ begin
     if fp ='1' then 
         A_fp := flt_to_real(operand_1);
         B_fp := flt_to_real(operand_2);
-        if opcode = "00" then -- add
-            result_fp := A_fp + B_fp;
-        elsif opcode = "01" then -- sub
-            result_fp := A_fp - B_fp;
-        elsif opcode = "10" then --mul
-            result_fp := A_fp * B_fp;
-        else
-            result_fp := 0.0;
-        end if;
+        case opcode is
+            when "00" =>
+                result_fp := A_fp + B_fp;
+            when "01" => 
+                result_fp := A_fp - B_fp;
+            when "10" =>
+                result_fp := A_fp * B_fp;
+            when others => 
+                result_fp := 0.0;
+        end case;
+--        if opcode = "00" then -- add
+--            result_fp := A_fp + B_fp;
+--        elsif opcode = "01" then -- sub
+--            result_fp := A_fp - B_fp;
+--        elsif opcode = "10" then --mul
+--            result_fp := A_fp * B_fp;
+--        else
+--            result_fp := 0.0;
+--        end if;
         output <= real_to_flt(result_fp);
      else
-        output <= (others => '0');
+        output <= ( others => '0' );
     end if;
 end process;
 

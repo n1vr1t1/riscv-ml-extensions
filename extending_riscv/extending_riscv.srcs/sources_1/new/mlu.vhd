@@ -95,6 +95,10 @@ process (ml, fp, opcode, operand_1, operand_2)
 begin
     if ml = '1' then
         if fp = '0' then -- integers
+            op1_fp := 0.0;
+            op2_fp  := 0.0;
+            op3_fp  := 0.0;
+            mul_fp := 0.0;
             multiply_result := std_logic_vector(unsigned(operand_1) * unsigned(operand_2));
             if opcode = '0' then --mac
                 output <= std_logic_vector(unsigned(multiply_result(31 downto 0)) + unsigned(operand_3));
@@ -110,6 +114,7 @@ begin
          op2_fp  := flt_to_real(operand_2);
          op3_fp  := flt_to_real(operand_3);
          mul_fp := op1_fp * op2_fp;
+         multiply_result := (others => '0');
             if opcode = '0' then -- mac
                 output <= real_to_flt(mul_fp + op3_fp);
             else -- leaky relu

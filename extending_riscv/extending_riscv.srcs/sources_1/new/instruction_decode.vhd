@@ -133,17 +133,29 @@ process (clk, rst) begin
         r1 <= (others => '0');
         r2 <= (others => '0');
     elsif rising_edge(clk) then 
-        if flush ='0' then 
-            pc_out <= pc_in;
-            destination_address <= instruction(11 downto 7);
-            r1 <= instruction(19 downto 15);
-            r2 <= instruction(24 downto 20);
-        else
-            pc_out <= (others => '0');
+        case flush is
+            when '0' => 
+                pc_out <= pc_in;
+                destination_address <= instruction(11 downto 7);
+                r1 <= instruction(19 downto 15);
+                r2 <= instruction(24 downto 20);
+            when others => 
+                pc_out <= (others => '0');
             destination_address <= (others => '0');
             r1 <= (others => '0');
-            r2 <= (others => '0'); 
-        end if;
+            r2 <= (others => '0');
+        end case;
+--        if flush ='0' then 
+--            pc_out <= pc_in;
+--            destination_address <= instruction(11 downto 7);
+--            r1 <= instruction(19 downto 15);
+--            r2 <= instruction(24 downto 20);
+--        else
+--            pc_out <= (others => '0');
+--            destination_address <= (others => '0');
+--            r1 <= (others => '0');
+--            r2 <= (others => '0'); 
+--        end if;
     end if;
 end process;
 end Behavioral;
