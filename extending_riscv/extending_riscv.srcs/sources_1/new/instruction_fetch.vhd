@@ -1,15 +1,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 
 entity instruction_fetch_stage is
@@ -29,14 +21,15 @@ signal enable : std_logic;
 signal instruction_signal : STD_LOGIC_VECTOR (31 downto 0);
 signal instruction_flush : std_logic;
 
-COMPONENT instruction_memory
-    PORT (clka : IN STD_LOGIC;
-      wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-      addra : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
-      dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-      douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0) 
-    );
-  END COMPONENT;
+COMPONENT instruction_memory IS
+  PORT (
+    clka : IN STD_LOGIC;
+    wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    addra : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
+    dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+  );
+END COMPONENT;
  component program_counter is
      Port (pc : in STD_LOGIC_VECTOR (11 downto 0);
      	clk: in std_logic;

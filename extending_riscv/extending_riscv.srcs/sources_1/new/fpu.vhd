@@ -13,112 +13,121 @@ end fpu;
 
 architecture Behavioral of fpu is
 
-  -- Correct IEEE 754 to real conversion
-    function flt_to_real( x : std_logic_vector( 31 downto 0 ) ) return real is
-        variable sign      : real;
-        variable exponent  : integer;
-        variable frac      : real;
-        variable div : real;
-        variable result    : real;
+    function flt_to_fixed(x : std_logic_vector(31 downto 0)) 
+    return signed is
+        variable s   : std_logic;
+        variable e   : integer;
+        variable m   : unsigned(23 downto 0);
+        variable tmp : signed(55 downto 0);
     begin
-        exponent := to_integer(unsigned(x(30 downto 23)));
-        frac := 1.0;
-        div := 0.5;
         
-        if exponent = 0 or exponent = 255 then
-            result := 0.0;
-            return result;
+        s := x(31);
+        e  := to_integer(unsigned(x(30 downto 23)));
+        if e = 0 or e = 255 then
+            m := (others => '0');
+        else
+            m := '1' & unsigned(x(22 downto 0));
         end if;
+        e := e - 127;
         
-        for i in 0 to 22 loop
-            if x(22 - i) = '1' then
-                frac := frac + div;
+        tmp := signed(resize(m, 56));
+        if e > 31 or e < -31 then
+            -- out of range (overflow/underflow) -> zero 
+            tmp := (others => '0');
+        elsif e >= 0 then
+            tmp := shift_left(tmp, e);
+        else
+            tmp := shift_right(tmp, -e);
+        end if;
+        if s = '1' then
+            tmp := -tmp;
+        end if;
+        return tmp;
+    end function;
+
+    function fixed_to_flt(fx : signed(55 downto 0)) return std_logic_vector is
+        variable res  : std_logic_vector(31 downto 0) := (others => '0');
+        variable signb: std_logic := '0';
+        variable abs_val : unsigned(fx'length-1 downto 0);
+        variable pos  : integer := -1;
+        variable mant : unsigned(23 downto 0);
+        variable exp  : integer;
+        variable i    : integer;
+    begin 
+        if fx < 0 then
+            signb := '1';
+            abs_val := unsigned(-fx);
+        else
+            signb := '0';
+            abs_val := unsigned(fx); 
+        end if;
+        for i in abs_val'length-1 downto 0 loop
+            if abs_val(i) = '1' and pos = -1 then
+                pos := i;
             end if;
-            div := div / 2.0;
         end loop;
-        
-        if x(31) = '1' then
-            sign := -1.0;
+        if pos = -1 then
+            mant := (others => '0');
+        -- position pos corresponds to value = abs_val * 2^(-23) * 2^pos ???
+        -- We want mant (24 bits) such that mant * 2^exp = value * 2^23
+        -- Given fixed representation, mant = abs_val >> (pos - 23) (or shifted left if pos < 23)
+        elsif pos >= 23 then
+            mant := resize( abs_val( pos downto pos-23 ), 24 );
         else
-            sign := 1.0;
+            mant := resize( shift_left(abs_val, 23 - pos)(23 downto 0), 24 );
         end if;
-        
-        result := sign * frac * (2.0 ** real(exponent - 127));
-        
-        frac := 0.0;
-        return result;
+        exp := pos - 23 + 127;
+        if exp <= 0 or exp >= 255 or fx = 0 then
+            res := (others => '0');
+        else
+            res(31) := signb;
+            res(30 downto 23) := std_logic_vector(to_unsigned(exp, 8));
+            res(22 downto 0) := std_logic_vector(mant(22 downto 0));
+        end if;
+        return res;
     end function;
 
-    -- Correct real to IEEE 754 conversion (normal numbers only)
-    function real_to_flt( x : real ) return std_logic_vector is
-        variable result   : std_logic_vector(31 downto 0) := (others => '0');
-        variable exp     : integer;
-        variable mant    : real;
-        variable mant_int : integer;
---        constant MANT_MAX : real    := 2.0 - (1.0 / real(2 ** (23)));
+begin
+
+    process(fp, opcode, operand_1, operand_2)
+        variable A_f, B_f : signed(55 downto 0);
+        variable prod : signed(111 downto 0);
     begin
-        if x < 0.0 then
-            result(31) := '1';
-            mant := -x;
+        if fp = '1' then
+            A_f := flt_to_fixed(operand_1);
+            B_f := flt_to_fixed(operand_2);
+            case opcode is
+                when "000" => -- add
+                    output <= fixed_to_flt(A_f + B_f);
+                when "001" => -- sub
+                    output <= fixed_to_flt(A_f - B_f);
+                when "010" => -- mul
+                    prod := signed( A_f ) * signed( B_f );
+                    output <= fixed_to_flt(signed( shift_right( prod, 23 )(55 downto 0) ));
+                when "011" => -- set if less than
+                    if A_f < B_f then
+                        alu_output <= operand_1;
+                    else
+                        alu_output <= operand_2;
+                    end if;
+                when "100" => -- set if less than or equal
+                    if A_f <= B_f then
+                        alu_output <= operand_1;
+                    else
+                        alu_output <= operand_2;
+                    end if;
+                when "101" => -- set if equal
+                    if A_f = B_f then
+                        alu_output <= "00000000000000000000000000000001";
+                    else
+                        alu_output <=(others => '0');
+                    end if;
+                when others =>
+                    output <= (others => '0');
+            end case;
         else
-            result(31) := '0';
-            mant := x;
+            output <= (others => '0');
         end if;
-        
-        if mant = 0.0 then
-            result(30 downto 0) := (others => '0');
-        else
-            while mant < 1.0 loop
-              exp  := exp - 1;
-              mant := mant * 2.0;
-            end loop;
-            while mant > 2.0 loop
-              exp  := exp + 1;
-              mant := mant / 2.0;
-            end loop;
-    
-            mant := mant - 1.0;
-            mant_int := integer(mant * real(2 ** (23)));  -- implicit round-to-nearest
-            result(22 downto 0) := std_logic_vector(to_unsigned(mant_int, 23));
-    
-            exp := exp + 127;
-            result(30 downto 23) := std_logic_vector(to_unsigned(exp, 8));
-        end if;
-
-        return result;
-    end function;
-
-begin
-
-process (fp, opcode, operand_1, operand_2)
-    variable A_fp, B_fp, result_fp : real;
-begin
-    if fp ='1' then 
-        A_fp := flt_to_real(operand_1);
-        B_fp := flt_to_real(operand_2);
-        case opcode is
-            when "00" =>
-                result_fp := A_fp + B_fp;
-            when "01" => 
-                result_fp := A_fp - B_fp;
-            when "10" =>
-                result_fp := A_fp * B_fp;
-            when others => 
-                result_fp := 0.0;
-        end case;
---        if opcode = "00" then -- add
---            result_fp := A_fp + B_fp;
---        elsif opcode = "01" then -- sub
---            result_fp := A_fp - B_fp;
---        elsif opcode = "10" then --mul
---            result_fp := A_fp * B_fp;
---        else
---            result_fp := 0.0;
---        end if;
-        output <= real_to_flt(result_fp);
-     else
-        output <= ( others => '0' );
-    end if;
-end process;
+    end process;
 
 end Behavioral;

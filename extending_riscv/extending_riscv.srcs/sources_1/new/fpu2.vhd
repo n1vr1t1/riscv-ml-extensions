@@ -199,7 +199,6 @@ process(fp, opcode, operand_1, operand_2)
             end if;
           end if;
 
-
         when "10" =>  -- multiply
           if (m1_24 = 0 or m2_24 = 0) then
             out_word := (others => '0');

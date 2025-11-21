@@ -29,43 +29,43 @@ begin
             alu_output <= std_logic_vector(unsigned(operand_1) - unsigned(operand_2)); 
         when "0010" => -- mul
             alu_output <= multiply_result(31 downto 0); 
-        when "0011" => -- or
-            alu_output <= std_logic_vector(unsigned(operand_1) or unsigned(operand_2));
-        when "0100" => -- and
-            alu_output <= std_logic_vector(unsigned(operand_1) and unsigned(operand_2));
-        when "0101" => -- xor
-            alu_output <= std_logic_vector(unsigned(operand_1) xor unsigned(operand_2));
-        when "0110" => -- div
-            alu_output <= std_logic_vector(to_signed(to_integer(signed(operand_1) / signed(operand_2)),32));
-        when "0111" => -- set if less than
+        when "0011" => -- set less than
             if signed(operand_1) < signed(operand_2) then
                 alu_output <= operand_1;
             else
                 alu_output <= operand_2;
             end if;
-        when "1000" => -- set if less than or equal
+        when "0100" => -- set if less than or equal
             if signed(operand_1) <= signed(operand_2) then
                 alu_output <= operand_1;
             else
                 alu_output <= operand_2;
             end if;
-        when "1001" => -- set if greater then or equal
-            if signed(operand_1) > signed(operand_2) then
-                alu_output <= operand_1;
+        when "0101" => -- set if equal
+            if operand_1 = operand_2 then
+                alu_output <= "00000000000000000000000000000001";
             else
-                alu_output <= operand_2;
+                alu_output <=(others => '0');
             end if;
-        when "1010" => -- set if greater then or equal
+        when "0110" => -- or
+            alu_output <= std_logic_vector(to_signed(to_integer(signed(operand_1) / signed(operand_2)),32));
+        when "0111" => -- and
+            alu_output <= std_logic_vector(unsigned(operand_1) and unsigned(operand_2));
+        when "1000" => -- xor
+            alu_output <= std_logic_vector(unsigned(operand_1) xor unsigned(operand_2));
+        when "1001" => -- div
+            alu_output <= std_logic_vector(unsigned(operand_1) or unsigned(operand_2));
+        when "1010" => -- set if greater than or equal
             if signed(operand_1) >= signed(operand_2) then
                 alu_output <= operand_1;
             else
                 alu_output <= operand_2;
             end if;
-        when "1011" => -- set if equal
-            if operand_1 = operand_2 then
-                alu_output <= "00000000000000000000000000000001";
+        when "1011" => -- set if greater than
+            if signed(operand_1) > signed(operand_2) then
+                alu_output <= operand_1;
             else
-                alu_output <=(others => '0');
+                alu_output <= operand_2;
             end if;
         when "1100" => -- lui
             alu_output <= operand_2;

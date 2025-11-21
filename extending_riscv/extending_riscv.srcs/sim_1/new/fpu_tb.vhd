@@ -50,7 +50,7 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "01"; -- sub
-        -- result = x"40200000" = 2.75
+        -- result = x"40300000" = 2.75
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
@@ -64,11 +64,11 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "01"; -- sub
-        -- result = x"c1200000" = -9.25
+        -- result = x"c1140000" = -9.25
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
-        -- result = x"c1880000" = -16.875
+        -- result = x"c1870000" = -16.875
         wait for 10 ns;
 
         opcode_tb <= "00"; -- add
@@ -82,7 +82,7 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
-        -- result = x"3d5b0000" = 0.0537109375
+        -- result = x"3d5c0000" = 0.0537109375
         wait for 10 ns;
         
         opcode_tb <= "00"; -- add
@@ -97,7 +97,7 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
-        -- result = x"3f800000"
+        -- result = x"40000000"
         wait for 10 ns;
 
         opcode_tb <= "00"; -- add
@@ -112,7 +112,7 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
-        -- result = x"40e00000"
+        -- result = x"40c00000"
         wait for 10 ns;
 
         opcode_tb <= "00"; -- add
@@ -127,7 +127,7 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
-        -- result = x"c0600000"
+        -- result = x"c0400000"
         wait for 10 ns;
         
         opcode_tb <= "00"; -- add
@@ -142,7 +142,7 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
-        -- result = x"42500000"
+        -- result = x"42200000"
         wait for 10 ns;
 
         opcode_tb <= "00"; -- add
@@ -157,7 +157,7 @@ begin
         wait for 10 ns;
 
         opcode_tb <= "10"; -- mul
-        -- result = x"c1780000"
+        -- result = x"c1700000"
         wait for 10 ns;
 
         opcode_tb <= "00"; -- add

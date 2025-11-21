@@ -1,15 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity instruction_decode is
   Port (pc_in : in STD_LOGIC_VECTOR (31 downto 0); --forwarded to the next stage without being used
       instruction : in STD_LOGIC_VECTOR (31 downto 0);
@@ -29,6 +20,7 @@ entity instruction_decode is
       conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0); 
       r1 : out std_logic_vector(4 downto 0);
       r2 : out std_logic_vector(4 downto 0);
+      r3 : out STD_LOGIC_vector(4 downto 0);
       s_value_1 : out STD_LOGIC_VECTOR (31 downto 0); 
       s_value_2 : out STD_LOGIC_VECTOR (31 downto 0);
       s_value_3 : out STD_LOGIC_VECTOR (31 downto 0);
@@ -42,18 +34,16 @@ architecture Behavioral of instruction_decode is
 component register_file is
   port (rst : in std_logic;
     clk : in std_logic;
---        stall : in std_logic;
     en : in std_logic; -- active low
-    r1 : in std_logic_vector( 4 downto 0 );-- Source 1 address
-    r2 : in std_logic_vector( 4 downto 0 );-- Source 2 address
-    rd_out : in std_logic_vector( 4 downto 0 );-- Destination address for reading
-    rd_in : in std_logic_vector( 4 downto 0 );-- Destination address for writing
-    rd_data_in : in std_logic_vector( 31 downto 0 );-- Destination data for writing
-    we : in std_logic;-- write enable
-    r1_data : out std_logic_vector( 31 downto 0 );-- Register value of source 1
-    r2_data : out std_logic_vector( 31 downto 0 );-- Register value of source 2
-    rd_data_out : out std_logic_vector( 31 downto 0 ) -- Register value of destination for reading
-  );
+    r1 : in std_logic_vector( 4 downto 0 );
+    r2 : in std_logic_vector( 4 downto 0 );
+    r3 : in std_logic_vector( 4 downto 0 );
+    rd_in : in std_logic_vector( 4 downto 0 );
+    rd_data_in : in std_logic_vector( 31 downto 0 );
+    we : in std_logic;
+    r1_data : out std_logic_vector( 31 downto 0 );
+    r2_data : out std_logic_vector( 31 downto 0 );
+    r3_data : out std_logic_vector( 31 downto 0 ));
  end component;
 component decoder is
   Port (rst : in std_logic;
@@ -91,13 +81,13 @@ reg_file_decode: register_file
         clk => clk,
         r1 => instruction(19 downto 15),
     	r2 => instruction(24 downto 20),
+    	r3 => instruction(11 downto 7),
     	rd_in => destination_address_from_wb,
     	rd_data_in => destination_value_from_wb,
     	we => write_enable_from_wb,
     	r1_data => s_value_1,
     	r2_data => s_value_2,
-        rd_out => instruction(11 downto 7),
-        rd_data_out => s_value_3,
+        r3_data => s_value_3,
     	en =>flush); -- need to and with the stall signal if creating one
 
 decoder_decode : decoder 
@@ -132,6 +122,7 @@ process (clk, rst) begin
         destination_address <= (others => '0');
         r1 <= (others => '0');
         r2 <= (others => '0');
+        r3 <= (others => '0');
     elsif rising_edge(clk) then 
         case flush is
             when '0' => 
@@ -139,11 +130,13 @@ process (clk, rst) begin
                 destination_address <= instruction(11 downto 7);
                 r1 <= instruction(19 downto 15);
                 r2 <= instruction(24 downto 20);
+                r3 <= instruction(11 downto 7);
             when others => 
                 pc_out <= (others => '0');
-            destination_address <= (others => '0');
-            r1 <= (others => '0');
-            r2 <= (others => '0');
+                destination_address <= (others => '0');
+                r1 <= (others => '0');
+                r2 <= (others => '0');
+                r3 <= (others => '0');
         end case;
 --        if flush ='0' then 
 --            pc_out <= pc_in;

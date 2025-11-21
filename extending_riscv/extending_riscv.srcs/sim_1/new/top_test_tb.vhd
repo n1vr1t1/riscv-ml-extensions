@@ -36,83 +36,19 @@ entity top_test_tb is
 end top_test_tb;
 
 architecture Behavioral of top_test_tb is
-component top_test is
+component top is
   Port (clk : in STD_LOGIC;
-        rst: in STD_LOGIC;
-        pc_in : in STD_LOGIC_VECTOR (31 downto 0);
-        instruction : in STD_LOGIC_VECTOR (31 downto 0);
-        destination_value_from_wb : in STD_LOGIC_VECTOR (31 downto 0);
-        destination_address_from_wb : in STD_LOGIC_VECTOR(4 DOWNTO 0);
-        write_enable_from_wb : in STD_LOGIC;
-        flush : in std_logic;
-        fpu_output : out STD_LOGIC_VECTOR (31 downto 0);
-        alu_output : out STD_LOGIC_VECTOR (31 downto 0);
-        mlu_output : out STD_LOGIC_VECTOR (31 downto 0);
-        branch_condition : out STD_LOGIC;
-        pc_out :  out STD_LOGIC_VECTOR (31 downto 0);
-        d_out :  out STD_LOGIC_VECTOR(4 downto 0);
-        a_select_forward : out std_logic;
-        b_select_forward : out std_logic;
-        opclass_out : out STD_LOGIC_VECTOR (4 downto 0);
-        value_1_forward : out STD_LOGIC_VECTOR (31 downto 0);
-        value_2_forward : out STD_LOGIC_VECTOR (15 downto 0);
-        a2_select : in STD_LOGIC;
-        b2_select : in STD_LOGIC;
-        c_select : in STD_LOGIC;
-        memory_value : in STD_LOGIC_VECTOR (31 downto 0));
+        rst: in STD_LOGIC);
 end component;
 
 signal rst : std_logic;
 signal clk : std_logic;
-signal pc_in : STD_LOGIC_VECTOR (31 downto 0);
-signal instruction : STD_LOGIC_VECTOR (31 downto 0);
-signal destination_value_from_wb : STD_LOGIC_VECTOR (31 downto 0);
-signal destination_address_from_wb : STD_LOGIC_VECTOR(4 DOWNTO 0);
-signal write_enable_from_wb : STD_LOGIC;
-signal flush : std_logic;
-signal fpu_output : STD_LOGIC_VECTOR (31 downto 0);
-signal alu_output : STD_LOGIC_VECTOR (31 downto 0);
-signal mlu_output : STD_LOGIC_VECTOR (31 downto 0);
-signal branch_condition : STD_LOGIC;
-signal pc_out : STD_LOGIC_VECTOR (31 downto 0);
-signal d_out : STD_LOGIC_VECTOR(4 downto 0);
-signal a_select_forward : std_logic;
-signal b_select_forward : std_logic;
-signal opclass_out : STD_LOGIC_VECTOR (4 downto 0);
-signal value_1_forward : STD_LOGIC_VECTOR (31 downto 0);
-signal value_2_forward : STD_LOGIC_VECTOR (15 downto 0);
-signal a2_select : STD_LOGIC;
-signal b2_select : STD_LOGIC;
-signal c_select : STD_LOGIC;
-signal memory_value : STD_LOGIC_VECTOR (31 downto 0);
 
 begin
 
-dut : top_test
+dut : top
 Port map(clk => clk,
-        rst => rst,
-        pc_in => pc_in,
-        instruction => instruction,
-        destination_value_from_wb => destination_value_from_wb,
-        destination_address_from_wb => destination_address_from_wb,
-        write_enable_from_wb => write_enable_from_wb,
-        flush => flush,
-        fpu_output => fpu_output,
-        alu_output => alu_output,
-        mlu_output => mlu_output,
-        branch_condition => branch_condition,
-        pc_out => pc_out,
-        d_out => d_out,
-        a_select_forward => a_select_forward,
-        b_select_forward => b_select_forward,
-        opclass_out => opclass_out,
-        value_1_forward => value_1_forward,
-        value_2_forward => value_2_forward,
-        a2_select => a2_select,
-        b2_select => b2_select,
-        c_select => c_select,
-        memory_value => memory_value);
-          	
+        rst => rst);
 clk_process: process begin
     clk<='0';
     wait for 1 ns;
@@ -126,186 +62,186 @@ rst_process: process begin
     rst<='1';
     wait;
 end process;
-actual_process: process begin
-    flush <= '0';
-    write_enable_from_wb <= '0';
-    a2_select <= '0';
-    b2_select <= '0';
-    c_select <= '0';
-    memory_value <= (others => '0');
-    wait for 2.5 ns;
-    instruction <= "11111111111111111111111111111111";
-    wait for 2 ns;
-    flush <= '1';
-    wait for 2 ns;
-    flush <= '0';
-    instruction <= "00000000010100100000000110110011"; --add
-    wait for 2 ns;
-    instruction <= "01000000010100100000000110110011";  --sub
-    destination_value_from_wb <= "00000000010100100000000110110011";
-    destination_address_from_wb <= "00100";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000010010100100000000110110011";  -- mul
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00101";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000010100000110100001000110011";  -- div
-    destination_value_from_wb <= "00000010010100100000000110110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000010100100110000110110011";  --or
-    destination_value_from_wb <= "00000010100000110100001000110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000101001011111011000110011";  --and
-    destination_value_from_wb <= "00000000010100100110000110110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000101001011100011000110011";  --xor 
-    destination_value_from_wb <= "00000000101001011111011000110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000110100000101011000110000011";  -- ld x3, 104(x5) 
-    destination_value_from_wb <= "00000000101001011100011000110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000110100000101010000110000111";  --flw f3, 104(x5) 
-    destination_value_from_wb <= "00000110100000101011000110000011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "11111110010001000010111000100011";  --sw x4, -4(x8) 
-    destination_value_from_wb <= x"40e80000"; -- 7.25
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "01111110010001000010111110100111";  --fsw f4, 2047(x8) 
-    destination_value_from_wb <= "11111110010001000010111000100011";
-    destination_address_from_wb <= "00100";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "01111111111100001000001110010011"; --addi
-    destination_value_from_wb <= "01111110010001000010111110100111";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "01111111111111111111010100110111";  -- lui x10, 524287
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00111";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000001000000001010010010011";  -- slli x9, x0, 2
-    destination_value_from_wb <= "01111111111111111111000000000000";
-    destination_address_from_wb <= "01010";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000001000000101010010010011"; -- srli
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "11001";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "01111010000100000000100111101111";  --  jal x19, 4000
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "01001";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "01110110011101001101011001100011";  -- bge x9, x7, 1900
-    destination_value_from_wb <= "00000000000000100000000110110011";
-    destination_address_from_wb <= "10011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "01110110011101001011011001100011";  -- bgt
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "01110110011101001100011001100011";  -- ble
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "01110110011101001010011001100011";  -- blt x9, x7, 1900
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "01110110011101001000011001100011";  -- be x9, x7, 1900
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "01110110011101001001011001100011";  -- bne x9, x7, 1900
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "00000000100101000000011101010111";  -- mac 
-    destination_value_from_wb <= "00000000000000000000000000000000";
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '0';
-    wait for 2 ns;
-    instruction <= "00000111111101000010011100110011";  -- cge
-    destination_value_from_wb <= x"3e200000"; -- 0.15625
-    destination_address_from_wb <= "00110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000011111101000010011100110011";  -- cgt
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "01110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000100101000010011100110011";  -- clt x14, x8, x9
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "01110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000101111101000010011100110011"; -- cle
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "01110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00001001111101000010011100110011"; -- ce
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "01110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000100101000001011101010111";  -- leaky relu
-    destination_value_from_wb <= x"00000000";
-    destination_address_from_wb <= "01110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000001101101010001001100110011";  -- sll
-    destination_value_from_wb <= x"3eb00000"; -- 0.34375
-    destination_address_from_wb <= "00011";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000001101101010101001100110011"; -- srl x6, x10, x27
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00000000010100100111000011010011";  --  fadd
-    destination_value_from_wb <= "01000000010100100000000110110011";
-    destination_address_from_wb <= "00110";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00001000010100100111000011010011";  -- fsub
-    destination_value_from_wb <= x"3f000000";
-    destination_address_from_wb <= "00001";
-    write_enable_from_wb <= '1';
-    wait for 2 ns;
-    instruction <= "00010000010100100111000011010011"; -- fmul.s f1, f4, f5
-    destination_value_from_wb <= x"be400000" ;
-    destination_address_from_wb <= "00001";
-    write_enable_from_wb <= '1';
-    wait;
-    end process;
+--actual_process: process begin
+--    flush <= '0';
+--    write_enable_from_wb <= '0';
+--    a2_select <= '0';
+--    b2_select <= '0';
+--    c_select <= '0';
+--    memory_value <= (others => '0');
+--    wait for 2.5 ns;
+--    instruction <= "11111111111111111111111111111111";
+--    wait for 2 ns;
+--    flush <= '1';
+--    wait for 2 ns;
+--    flush <= '0';
+--    instruction <= "00000000010100100000000110110011"; --add
+--    wait for 2 ns;
+--    instruction <= "01000000010100100000000110110011";  --sub
+--    destination_value_from_wb <= "00000000010100100000000110110011";
+--    destination_address_from_wb <= "00100";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000010010100100000000110110011";  -- mul
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00101";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000010100000110100001000110011";  -- div
+--    destination_value_from_wb <= "00000010010100100000000110110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000010100100110000110110011";  --or
+--    destination_value_from_wb <= "00000010100000110100001000110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000101001011111011000110011";  --and
+--    destination_value_from_wb <= "00000000010100100110000110110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000101001011100011000110011";  --xor 
+--    destination_value_from_wb <= "00000000101001011111011000110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000110100000101011000110000011";  -- ld x3, 104(x5) 
+--    destination_value_from_wb <= "00000000101001011100011000110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000110100000101010000110000111";  --flw f3, 104(x5) 
+--    destination_value_from_wb <= "00000110100000101011000110000011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "11111110010001000010111000100011";  --sw x4, -4(x8) 
+--    destination_value_from_wb <= x"40e80000"; -- 7.25
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "01111110010001000010111110100111";  --fsw f4, 2047(x8) 
+--    destination_value_from_wb <= "11111110010001000010111000100011";
+--    destination_address_from_wb <= "00100";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "01111111111100001000001110010011"; --addi
+--    destination_value_from_wb <= "01111110010001000010111110100111";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "01111111111111111111010100110111";  -- lui x10, 524287
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00111";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000001000000001010010010011";  -- slli x9, x0, 2
+--    destination_value_from_wb <= "01111111111111111111000000000000";
+--    destination_address_from_wb <= "01010";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000001000000101010010010011"; -- srli
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "11001";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "01111010000100000000100111101111";  --  jal x19, 4000
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "01001";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "01110110011101001101011001100011";  -- bge x9, x7, 1900
+--    destination_value_from_wb <= "00000000000000100000000110110011";
+--    destination_address_from_wb <= "10011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "01110110011101001011011001100011";  -- bgt
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "01110110011101001100011001100011";  -- ble
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "01110110011101001010011001100011";  -- blt x9, x7, 1900
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "01110110011101001000011001100011";  -- be x9, x7, 1900
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "01110110011101001001011001100011";  -- bne x9, x7, 1900
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "00000000100101000000011101010111";  -- mac 
+--    destination_value_from_wb <= "00000000000000000000000000000000";
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '0';
+--    wait for 2 ns;
+--    instruction <= "00000111111101000010011100110011";  -- cge
+--    destination_value_from_wb <= x"3e200000"; -- 0.15625
+--    destination_address_from_wb <= "00110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000011111101000010011100110011";  -- cgt
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "01110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000100101000010011100110011";  -- clt x14, x8, x9
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "01110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000101111101000010011100110011"; -- cle
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "01110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00001001111101000010011100110011"; -- ce
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "01110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000100101000001011101010111";  -- leaky relu
+--    destination_value_from_wb <= x"00000000";
+--    destination_address_from_wb <= "01110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000001101101010001001100110011";  -- sll
+--    destination_value_from_wb <= x"3eb00000"; -- 0.34375
+--    destination_address_from_wb <= "00011";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000001101101010101001100110011"; -- srl x6, x10, x27
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00000000010100100111000011010011";  --  fadd
+--    destination_value_from_wb <= "01000000010100100000000110110011";
+--    destination_address_from_wb <= "00110";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00001000010100100111000011010011";  -- fsub
+--    destination_value_from_wb <= x"3f000000";
+--    destination_address_from_wb <= "00001";
+--    write_enable_from_wb <= '1';
+--    wait for 2 ns;
+--    instruction <= "00010000010100100111000011010011"; -- fmul.s f1, f4, f5
+--    destination_value_from_wb <= x"be400000" ;
+--    destination_address_from_wb <= "00001";
+--    write_enable_from_wb <= '1';
+--    wait;
+--    end process;
 
 end Behavioral;
