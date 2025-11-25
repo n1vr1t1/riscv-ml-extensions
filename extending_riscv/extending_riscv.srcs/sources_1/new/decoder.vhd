@@ -1,5 +1,5 @@
 -------------------------------------------------
--- add a new block for comparasions (that gives out 1 if the condition is true, else 0). 
+-- add path from comparator that gives out 1 if the condition is true, else 0 for code checks (NO) 
 -- The alu gives back the value that satisfies the condition
 -- add if block for immediate operations
 
@@ -106,15 +106,15 @@ process (rst, clk) begin
 					end if;  --end if for funct7
 				elsif funct3 = "010" then -- set less than (slt) -- moveed to a different opcode
 				    if funct7 = "0000000" then -- set less than
-                        alu_opcode <= "0111";
+                        alu_opcode <= "0011";
 				    elsif funct7 = "0000001" then -- set greater then
-                        alu_opcode <= "1001";
+                        alu_opcode <= "1011";
 				    elsif funct7 = "0000010" then -- set less than or equal to
-                        alu_opcode <= "1000";
+                        alu_opcode <= "0100";
 				    elsif funct7 = "0000011" then -- set greater than or equal to
                         alu_opcode <= "1010";
 				    elsif funct7 = "0000100" then -- set if equal
-				        alu_opcode <= "1011";
+				        alu_opcode <= "0101";
 				    else 
 				        alu_opcode <= "1111"; -- invalid operation
 					end if;  --end if for funct7
@@ -123,9 +123,9 @@ process (rst, clk) begin
 				
 				elsif funct3 = "100" then 
 				    if funct7 = "0000000" then -- xor
-				        alu_opcode <= "0101";
+				        alu_opcode <= "1000";
 				     elsif funct7 = "0000001" then -- div
-				        alu_opcode <= "0110";
+				        alu_opcode <= "1001";
 				     else 
 				        alu_opcode <= "1111"; -- invalid operation
 				     end if;
@@ -134,9 +134,9 @@ process (rst, clk) begin
 				    --funct7 = "0000000" then -- shift right logical (srl)
 				    -- funct7 = "0100000" then  -- shift right arthmethic (sra)
 				elsif funct3 = "110" then -- or
-				    alu_opcode <= "0011";
+				    alu_opcode <= "0110";
 				else -- funct3 = "111" -- and
-				    alu_opcode <= "0100";
+				    alu_opcode <= "0111";
                 end if;
 			elsif op_code = "1100011" then --branch
 				op_class <= "01000";
@@ -183,10 +183,24 @@ process (rst, clk) begin
                     else
                         alu_opcode <= "1111";
 			        end if; -- funct7
+                elsif funct3 = "000" then
+                    if funct7 = "1110000" then -- int to float
+			             alu_opcode <= "0110";
+                    elsif funct7 = "1111000" then -- float to int
+                        alu_opcode <= "0111";
+                    elsif funct7 = "1010000" then -- fle
+                        alu_opcode <= "0100";
+                    else 
+                        alu_opcode <= "1111";
+                    end if;
+                elsif funct3 = "010" then -- feq
+                    alu_opcode <= "0101";
+                elsif funct3 = "001" then -- flt
+                    alu_opcode <= "0011";
 			    else
 			        alu_opcode <= "1111";
 			    end if; --funct3
-			elsif op_code = "1010111" then -- ml operations
+            elsif op_code = "1010111" then -- ml operations
                 a_select <= '0';
                 b_select <= '0';
                 f_op <= '0';

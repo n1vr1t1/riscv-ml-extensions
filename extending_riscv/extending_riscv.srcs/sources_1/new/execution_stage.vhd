@@ -53,7 +53,7 @@ architecture Behavioral of execution_stage is
     end component;
     component fpu is
         Port (fp : in std_logic;
-            opcode : in STD_LOGIC_VECTOR (1 downto 0);
+            opcode : in STD_LOGIC_VECTOR (2 downto 0);
             operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
             operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
             output : out STD_LOGIC_VECTOR (31 downto 0));
@@ -88,7 +88,7 @@ begin
                 branch_condition  => branch_condition_signal);
     fpu_exe : fpu
         Port map(fp => is_float_signal, 
-                opcode => alu_opcode_signal(1 downto 0), 
+                opcode => alu_opcode_signal(2 downto 0), 
                 operand_1 => operand_signal_1, 
                 operand_2 => operand_signal_2, 
                 output => fpu_output);

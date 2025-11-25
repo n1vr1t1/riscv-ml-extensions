@@ -5,7 +5,7 @@ use ieee.math_real.all;
 
 entity fpu is
   Port (fp : in std_logic;
-        opcode : in STD_LOGIC_VECTOR (1 downto 0);
+        opcode : in STD_LOGIC_VECTOR (2 downto 0);
         operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
         operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
         output : out STD_LOGIC_VECTOR (31 downto 0));
@@ -106,24 +106,26 @@ begin
                     output <= fixed_to_flt(signed( shift_right( prod, 23 )(55 downto 0) ));
                 when "011" => -- set if less than
                     if A_f < B_f then
-                        alu_output <= operand_1;
+                        output <= operand_1;
                     else
-                        alu_output <= operand_2;
+                        output <= operand_2;
                     end if;
                 when "100" => -- set if less than or equal
                     if A_f <= B_f then
-                        alu_output <= operand_1;
+                        output <= operand_1;
                     else
-                        alu_output <= operand_2;
+                        output <= operand_2;
                     end if;
                 when "101" => -- set if equal
                     if A_f = B_f then
-                        alu_output <= "00000000000000000000000000000001";
+                        output <= "00000000000000000000000000000001";
                     else
-                        alu_output <=(others => '0');
+                        output <=(others => '0');
                     end if;
-                when others =>
-                    output <= (others => '0');
+                when "110" => -- int to float
+                    output <= fixed_to_flt(signed(operand_1));
+                when others => -- float to int
+                    output <= std_logic_vector(A_f);
             end case;
         else
             output <= (others => '0');
