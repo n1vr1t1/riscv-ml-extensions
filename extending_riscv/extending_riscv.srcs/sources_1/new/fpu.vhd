@@ -123,9 +123,9 @@ begin
                         output <=(others => '0');
                     end if;
                 when "110" => -- int to float
-                    output <= fixed_to_flt(signed(operand_1));
+                    output <= fixed_to_flt(resize(signed(operand_1), 56));
                 when others => -- float to int
-                    output <= std_logic_vector(A_f);
+                    output <= std_logic_vector(to_signed(to_integer(A_f), 32));
             end case;
         else
             output <= (others => '0');

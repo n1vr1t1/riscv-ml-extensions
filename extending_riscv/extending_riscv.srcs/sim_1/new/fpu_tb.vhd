@@ -12,7 +12,7 @@ end fpu_tb;
 architecture Behavioral of fpu_tb is
     component fpu is
         Port (fp : in  std_logic;
-            opcode : in  STD_LOGIC_VECTOR (1 downto 0);
+            opcode : in  STD_LOGIC_VECTOR (2 downto 0);
             operand_1 : in  STD_LOGIC_VECTOR (31 downto 0);
             operand_2 : in  STD_LOGIC_VECTOR (31 downto 0);
             output : out STD_LOGIC_VECTOR (31 downto 0)
@@ -20,7 +20,7 @@ architecture Behavioral of fpu_tb is
     end component;
 
 signal fp_tb : std_logic;
-signal opcode_tb : std_logic_vector(1 downto 0);
+signal opcode_tb : std_logic_vector(2 downto 0);
 signal operand_1_tb : std_logic_vector(31 downto 0);
 signal operand_2_tb : std_logic_vector(31 downto 0);
 signal output_tb : std_logic_vector(31 downto 0);
@@ -37,174 +37,105 @@ begin
     process begin
     
         fp_tb <= '0';
-        opcode_tb <= "11"; -- add
+        opcode_tb <= "111"; -- 
         operand_1_tb <= x"00000000"; -- 1.0
         operand_2_tb <= x"00000000"; -- 2.0
         wait for 10 ns;
         
         fp_tb <= '1';
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"40e80000"; -- 7.25
-        operand_2_tb <= x"40900000"; -- 4.5
-        -- result = x"413c0000" = 11.75
         wait for 10 ns;
 
-        opcode_tb <= "01"; -- sub
-        -- result = x"40300000" = 2.75
-        wait for 10 ns;
+        -- TEST 1 : ADD (3.5 + 2.25)
+        opcode_tb <= "000"; 
+        operand_1_tb <= x"40600000";
+        operand_2_tb <= x"40100000";
+        wait for 20 ns;
 
-        opcode_tb <= "10"; -- mul
-        -- result = x"42028000" = 32.625
-        wait for 10 ns;
+        -- TEST 2 : SUB (10.0 - 4.0)
+        opcode_tb <= "001"; 
+        operand_1_tb <= x"41200000";
+        operand_2_tb <= x"40800000";
+        wait for 20 ns;
 
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"c0200000"; -- -2.5
-        operand_2_tb <= x"40d80000"; -- 6.75
-        -- result = x"40880000" = 4.25
-        wait for 10 ns;
+        -- TEST 3 : MUL (1.5 × -2.0)
+        opcode_tb <= "010";
+        operand_1_tb <= x"3FC00000";
+        operand_2_tb <= x"C0000000";
+        wait for 20 ns;
 
-        opcode_tb <= "01"; -- sub
-        -- result = x"c1140000" = -9.25
-        wait for 10 ns;
+        -- TEST 4 : Set Less Than (1.0 < 2.0)
+        opcode_tb <= "011";
+        operand_1_tb <= x"3F800000";
+        operand_2_tb <= x"40000000";
+        wait for 20 ns;
 
-        opcode_tb <= "10"; -- mul
-        -- result = x"c1870000" = -16.875
-        wait for 10 ns;
+        -- TEST 5 : LTE (3.0 <= 3.0)
+        opcode_tb <= "100";
+        operand_1_tb <= x"40400000";
+        operand_2_tb <= x"40400000";
+        wait for 20 ns;
 
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"3e200000"; -- 0.15625
-        operand_2_tb <= x"3eb00000"; -- 0.34375
-        -- result = x"3f000000" = 0.5
-        wait for 10 ns;
+        -- TEST 6 : Equal (5.5 == 5.5)
+        opcode_tb <= "101";
+        operand_1_tb <= x"40B00000";
+        operand_2_tb <= x"40B00000";
+        wait for 20 ns;
 
-        opcode_tb <= "01"; -- sub
-        -- result = x"be400000" = -0.1875
-        wait for 10 ns;
+        -- TEST 7 : INT ? FLOAT (42)
+        opcode_tb <= "110";
+        operand_1_tb <= x"0000002A";
+        operand_2_tb <= x"00000000";
+        wait for 20 ns;
 
-        opcode_tb <= "10"; -- mul
-        -- result = x"3d5c0000" = 0.0537109375
-        wait for 10 ns;
-        
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"3F800000"; -- 1.0
-        operand_2_tb <= x"40000000"; -- 2.0
-        -- result = x"40400000" = 3.0
-        wait for 10 ns;
+        -- TEST 8 : FLOAT ? INT (-7.25)
+        opcode_tb <= "111";
+        operand_1_tb <= x"C0E80000";
+        operand_2_tb <= x"00000000";
+        wait for 20 ns;
 
-        opcode_tb <= "01"; -- sub
-        -- result = x"bf800000"
-        
-        wait for 10 ns;
 
-        opcode_tb <= "10"; -- mul
-        -- result = x"40000000"
-        wait for 10 ns;
-
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"40400000"; -- 3.0
-        operand_2_tb <= x"40000000"; -- 2.0
-        -- result = x"40a00000"
-        wait for 10 ns;
-        
-        opcode_tb <= "01"; -- sub
-        -- result = x"3f800000"
-        
-        wait for 10 ns;
-
-        opcode_tb <= "10"; -- mul
-        -- result = x"40c00000"
-        wait for 10 ns;
-
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"3F800000"; -- 1.0
-        operand_2_tb <= x"C0400000"; -- -3.0
-        -- result = x"c0000000"
-        wait for 10 ns;
-        
-        opcode_tb <= "01"; -- sub
-        -- result = x"40800000"
-        
-        wait for 10 ns;
-
-        opcode_tb <= "10"; -- mul
-        -- result = x"c0400000"
-        wait for 10 ns;
-        
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"C1000000"; -- -8.0
-        operand_2_tb <= x"C0A00000"; -- -5.0
-        -- result = x"c1500000"
-        wait for 10 ns;
-        
-        opcode_tb <= "01"; -- sub
-        -- result = x"c0400000"
-        
-        wait for 10 ns;
-
-        opcode_tb <= "10"; -- mul
-        -- result = x"42200000"
-        wait for 10 ns;
-
-        opcode_tb <= "00"; -- add
-        operand_1_tb <= x"C0A00000"; -- -5.0
-        operand_2_tb <= x"40400000"; -- 3.0
-        -- result = x"c0000000"
-        wait for 10 ns;
-        
-        opcode_tb <= "01"; -- sub
-        -- result = x"c1000000"
-        
-        wait for 10 ns;
-
-        opcode_tb <= "10"; -- mul
-        -- result = x"c1700000"
-        wait for 10 ns;
-
-        opcode_tb <= "00"; -- add
+        opcode_tb <= "000"; -- add
         operand_1_tb <= x"00000000"; -- 0.0
         operand_2_tb <= x"00000000"; -- 0.0
         -- result = x"00000000"
         wait for 10 ns;
 
-        opcode_tb <= "01"; -- sub
+        opcode_tb <= "001"; -- sub
         -- result = x"80000000"
         wait for 10 ns;
 
-        opcode_tb <= "10"; -- mul
+        opcode_tb <= "010"; -- mul
         -- result = x"00000000"
         wait for 10 ns;
 
-        opcode_tb <= "00"; -- add
+        opcode_tb <= "000"; -- add
         operand_1_tb <= x"7f7fffff"; -- max normal
         operand_2_tb <= x"7f7fffff"; -- max normal
         -- result = x"7f800000" -- +Inf
         wait for 10 ns;
 
-        opcode_tb <= "00"; -- add
+        opcode_tb <= "000"; -- add
         operand_1_tb <= x"ff7fffff"; -- min negative normal
         operand_2_tb <= x"ff7fffff"; -- min negative normal
         -- result = x"ff800000" -- -Inf (overflow)
         wait for 10 ns;
 
-        opcode_tb <= "10"; -- mul
+        opcode_tb <= "010"; -- mul
         operand_1_tb <= x"7f7fffff"; -- max normal
         operand_2_tb <= x"40000000"; -- 2.0
         -- result = x"7f800000" -- +Inf (overflow)
         wait for 10 ns;
 
-        opcode_tb <= "00"; -- add
+        opcode_tb <= "000"; -- add
         operand_1_tb <= x"7f800000"; -- +Inf
         operand_2_tb <= x"ff800000"; -- -Inf
         -- result = x"00000000" -- (should be NaN, but your FPU sets to 0.0)
         wait for 10 ns;
 
-        opcode_tb <= "01"; -- sub
+        opcode_tb <= "001"; -- sub
         operand_1_tb <= x"80000000"; -- -0.0
         operand_2_tb <= x"00000000"; -- +0.0
         -- result = x"80000000" -- -0.0
-        wait for 10 ns;
-
-        opcode_tb <= "11"; -- invalid
         wait for 10 ns;
         wait;
     end process;
