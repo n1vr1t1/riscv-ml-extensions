@@ -1,3 +1,17 @@
+-- Notes:
+-- 1. The datapath contains the main alu which is always used for every instruction. 
+--    There are 3 other alus that are activated and used only for vector instructions, 
+--    they perform the exact same operations as the main alu. 
+--
+-- 
+-- Todo:
+-- 1. Remove ml_opcode, float_forward, ml_forward, fpu_output, mlu_output
+-- 2. Add inputs and outputs for vector (vec_reg_write_en, v2_output_signal, v3_output_signal, 
+--    v4_output_signal, vec_output, )
+-- 3. separate the vector into 4 elements and forward them to each alu
+-- 4. Based on the opcode, combine the outputs from each alu 
+--    or just take the output of the main alu
+--------------------------------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
@@ -46,61 +60,81 @@ architecture Behavioral of execution_stage is
               branch_condition : out STD_LOGIC);
     end component;
     component alu is
-        Port (alu_opcode : in STD_LOGIC_VECTOR (3 downto 0);
+        Port (opcode : in STD_LOGIC_VECTOR (3 downto 0);
           operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
           operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
+          operand_3 : in STD_LOGIC_VECTOR (31 downto 0);
+          is_float : in STD_LOGIC;
+          is_ml : in STD_LOGIC;
+          en : in STD_LOGIC;
           alu_output : out STD_LOGIC_VECTOR (31 downto 0));
     end component;
-    component fpu is
-        Port (fp : in std_logic;
-            opcode : in STD_LOGIC_VECTOR (2 downto 0);
-            operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
-            operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
-            output : out STD_LOGIC_VECTOR (31 downto 0));
-    end component;
-    component mlu is
-      Port (ml : in std_logic;
-            fp : in std_logic;
-            opcode : in std_logic;
-            operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
-            operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
-            operand_3 : in STD_LOGIC_VECTOR (31 downto 0);
-            output : out STD_LOGIC_VECTOR (31 downto 0));
-    end component;
+--    component fpu is
+--        Port (fp : in std_logic;
+--            opcode : in STD_LOGIC_VECTOR (2 downto 0);
+--            operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
+--            operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
+--            output : out STD_LOGIC_VECTOR (31 downto 0));
+--    end component;
+--    component mlu is
+--      Port (ml : in std_logic;
+--            fp : in std_logic;
+--            opcode : in std_logic;
+--            operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
+--            operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
+--            operand_3 : in STD_LOGIC_VECTOR (31 downto 0);
+--            output : out STD_LOGIC_VECTOR (31 downto 0));
+--    end component;
 
-signal branch_condition_signal, is_float_signal, is_ml_signal : std_logic;
+signal branch_condition_signal, is_float_signal, is_ml_signal, vec_signal : std_logic;
 signal operand_signal_1, operand_signal_2, operand_signal_3 : std_logic_vector(31 downto 0);
 signal conditional_opcode_signal : STD_LOGIC_VECTOR (2 downto 0);
 signal alu_opcode_signal : STD_LOGIC_VECTOR (3 downto 0);
-signal ml_opcode_signal : STD_LOGIC;
 signal load_value_1, load_value_2 : std_logic_vector(31 downto 0);
 
 begin
-    alu_exe : alu
-        Port map(alu_opcode  => alu_opcode_signal,
-                operand_1  => operand_signal_1,
-                operand_2  => operand_signal_2,
-                alu_output => alu_output);
+    alu_1 : alu
+        Port map(opcode => alu_opcode_signal,
+                 operand_1 => operand_signal_1,
+                 operand_2 => operand_signal_2,
+                 operand_3 => operand_signal_3,
+                 is_float => is_float_signal,
+                 is_ml => is_ml_signal,
+                 en => '1',
+                 alu_output => alu_output);
     comp_exe : comparator
         Port map(value_1 => load_value_1,
                 value_2  => load_value_2,
                 cond_opcode  => conditional_opcode_signal,
                 branch_condition  => branch_condition_signal);
-    fpu_exe : fpu
-        Port map(fp => is_float_signal, 
-                opcode => alu_opcode_signal(2 downto 0), 
-                operand_1 => operand_signal_1, 
-                operand_2 => operand_signal_2, 
-                output => fpu_output);
-    mlu_exe : mlu
-        Port map(ml => is_ml_signal,
-                fp => is_float_signal,
-                opcode => ml_opcode_signal,
-                operand_1 => operand_signal_1,
-                operand_2 => operand_signal_2,
-                operand_3 => operand_signal_3,
-                output => mlu_output);
-
+    alu_2 : alu
+        Port map(opcode => alu_opcode_signal,
+                 operand_1 => operand_signal_1,
+                 operand_2 => operand_signal_2,
+                 operand_3 => operand_signal_3,
+                 is_float => is_float_signal,
+                 is_ml => is_ml_signal,
+                 en => vec_signal,
+                 alu_output => alu_output);
+    alu_3 : alu
+        Port map(opcode => alu_opcode_signal,
+                 operand_1 => operand_signal_1,
+                 operand_2 => operand_signal_2,
+                 operand_3 => operand_signal_3,
+                 is_float => is_float_signal,
+                 is_ml => is_ml_signal,
+                 en => vec_signal,
+                 alu_output => alu_output);
+    alu_4 : alu
+        Port map(opcode => alu_opcode_signal,
+                 operand_1 => operand_signal_1,
+                 operand_2 => operand_signal_2,
+                 operand_3 => operand_signal_3,
+                 is_float => is_float_signal,
+                 is_ml => is_ml_signal,
+                 en => vec_signal,
+                 alu_output => alu_output);  
+                           
 branch_condition <= branch_condition_signal;
 float_forward <= is_float_signal;
 ml_forward <= is_ml_signal;
@@ -110,7 +144,6 @@ process (rst, clk) begin
 	    alu_opcode_signal <= (others => '0');
 	    is_float_signal <= '0';
 	    is_ml_signal <= '0';
-	    ml_opcode_signal <= '0';
 	    conditional_opcode_signal <= (others => '0');
         pc_out <= (others => '0');
 		value_1_forward <= (others => '0');
@@ -131,7 +164,6 @@ process (rst, clk) begin
             alu_opcode_signal <= alu_opcode;
             is_float_signal <= is_float;
 	        is_ml_signal <= is_ml;
-	        ml_opcode_signal <= ml_opcode;
             conditional_opcode_signal <= conditional_opcode;
             pc_out <= pc;
             value_1_forward <= value_1;
@@ -169,7 +201,6 @@ process (rst, clk) begin
 	       alu_opcode_signal <= (others => '0');
 	       is_float_signal <= '0';
 	       is_ml_signal <= '0';
-	       ml_opcode_signal <= '0';
            conditional_opcode_signal <= (others => '0');
            pc_out <= (others => '0');
            value_1_forward <= (others => '0');

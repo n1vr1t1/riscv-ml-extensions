@@ -1,3 +1,7 @@
+---------------------------------------
+--- To do:
+--- 1. Need to add support for floating point comparisons?
+---------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
