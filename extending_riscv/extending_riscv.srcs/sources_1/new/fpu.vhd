@@ -5,7 +5,7 @@ use ieee.math_real.all;
 
 entity fpu is
   Port (fp : in std_logic;
-        opcode : in STD_LOGIC_VECTOR (2 downto 0);
+        opcode : in STD_LOGIC_VECTOR (3 downto 0);
         operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
         operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
         output : out STD_LOGIC_VECTOR (31 downto 0));
@@ -97,35 +97,43 @@ begin
             A_f := flt_to_fixed(operand_1);
             B_f := flt_to_fixed(operand_2);
             case opcode is
-                when "000" => -- add
+                when "0000" => -- add
                     output <= fixed_to_flt(A_f + B_f);
-                when "001" => -- sub
+                when "0001" => -- sub
                     output <= fixed_to_flt(A_f - B_f);
-                when "010" => -- mul
+                when "0010" => -- mul
                     prod := signed( A_f ) * signed( B_f );
                     output <= fixed_to_flt(signed( shift_right( prod, 23 )(55 downto 0) ));
-                when "011" => -- set if less than
+                when "0011" => -- set if less than /min
                     if A_f < B_f then
                         output <= operand_1;
                     else
                         output <= operand_2;
                     end if;
-                when "100" => -- set if less than or equal
+                when "0100" => -- set if greater then /max
+                    if A_f > B_f then
+                        output <= operand_1;
+                    else
+                        output <= operand_2;
+                    end if;
+                when "0101" => -- set if less than or equal
                     if A_f <= B_f then
                         output <= operand_1;
                     else
                         output <= operand_2;
                     end if;
-                when "101" => -- set if equal
+                when "0110" => -- set if equal
                     if A_f = B_f then
                         output <= "00000000000000000000000000000001";
                     else
                         output <=(others => '0');
                     end if;
-                when "110" => -- int to float
+                when "0111" => -- int to float
                     output <= fixed_to_flt(resize(signed(operand_1), 56));
-                when others => -- float to int
+                when "1000" => -- float to int
                     output <= std_logic_vector(to_signed(to_integer(A_f), 32));
+                when others =>
+                    output <= (others => '0');
             end case;
         else
             output <= (others => '0');
