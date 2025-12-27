@@ -1,8 +1,4 @@
 -------------------------------------------------
--- add path from comparator that gives out 1 if the condition is true, else 0 for code checks (NO) 
--- The alu gives back the value that satisfies the condition
--- add if block for immediate operations
-
 -- Notes: 
 -- 1. For flw and fsw, the float bit is not activated because we are writing to the normal register file 
 --    and the address is an int, therefore only the alu is used
@@ -10,6 +6,9 @@
 -- 3. ml opcode is  1000001
 
 -- To do:
+-- 1. add path from comparator that gives out 1 if the condition is true, else 0 for code checks (NO) 
+-- The alu gives back the value that satisfies the condition
+-- 2. add if block for immediate operations
 ---------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -66,7 +65,7 @@ process (rst, clk) begin
 					opclass <= "00001";
 					operation_code <= "0000"; -- add
 					a_select <= '0';
-					b_select <= '1';
+					b_select <= '1'; -- for vle, the immediate is 0, and for flw the immediate is taken from the instruction
 					vpu_en <= '0'; -- does not use the values from the vector register therefore the vpu does not need to be activated
 					fpu_en <= '0';
 					mlu_en <= '0';
@@ -219,7 +218,7 @@ process (rst, clk) begin
 							operation_code <= "0101";
 						when "001" => -- flt
 							operation_code <= "0011";
-						others =>
+						when others =>
 							operation_code <= "1111";
 					end case;
 				when "1000001" => -- ml operations
@@ -268,7 +267,7 @@ process (rst, clk) begin
 									operation_code <= "0000";
 								when others => operation_code <= "1111";
 							end case;
-						when "001" | "101" then -- vector-vector (float)
+						when "001" | "101" => -- vector-vector (float)
 							fpu_en <= '1';
 							mlu_en <= '0';
 							case funct6 is
@@ -286,11 +285,11 @@ process (rst, clk) begin
 									operation_code <= "0000"; 
 								when others => operation_code <= "1111";
 							end case;
-						when "010" | "110" then -- vmul.vv/vmul.vx (funct7 = "1001010")
+						when "010" | "110" => -- vmul.vv/vmul.vx (funct7 = "1001010")
 							fpu_en <= '0';
 							mlu_en <= '0';
 							operation_code <= "0010";
-						when "011" then -- vector-immediate
+						when "011" => -- vector-immediate
 							fpu_en <= '0';
 							mlu_en <= '0';
 							b_select <= '1';
