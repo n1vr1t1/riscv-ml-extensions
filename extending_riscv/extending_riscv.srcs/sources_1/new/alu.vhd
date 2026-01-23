@@ -104,16 +104,16 @@ process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) begin
             mul_fp := signed(op1_fp) * signed(op2_fp);
             multiply_result := (others => '0');
             if is_ml = '1' then -- ml operations with floating point operands
-                if opcode(3) = '1' then 
-                    output <= (others => '0'); -- assuming that the operation is invalid
-                elsif opcode(0) = '0' then -- macc
+                if opcode(0) = '1' then -- macc
                     output <= fixed_to_flt(signed( shift_right( mul_fp, 23 )( 55 downto 0 )) + op3_fp);
-                else -- leaky relu
+                elsif opcode(1) = '1' then -- leaky relu
                     if op1_fp >= 0 then
                         output <= operand_1;
                     else
                         output <= fixed_to_flt( signed( shift_right( mul_fp, 23 )( 55 downto 0 )));
                     end if;
+                else 
+                    output <= (others => '0'); -- assuming that the operation is invalid
                 end if;
             else -- normal floating point operation
                 case opcode is
@@ -130,7 +130,7 @@ process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) begin
                         else
                             output <= operand_2;
                         end if;
-                    when "0100" => -- set if greater then /max
+                    when "0100" => -- set if greater then/max
                         if op1_fp > op2_fp then
                             output <= operand_1;
                         else
@@ -144,9 +144,10 @@ process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) begin
                         end if;
                     when "0110" => -- set if equal
                         if op1_fp = op2_fp then
-                            output <= "00000000000000000000000000000001";
+                            output(31 downto 1) <= (others => '0');
+                            output(0) <= '1';
                         else
-                            output <=(others => '0');
+                            output <= (others => '0');
                         end if;
                     when "0111" => -- int to float
                         output <= fixed_to_flt(resize(signed(operand_1), 56));
@@ -163,18 +164,18 @@ process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) begin
             op3_fp  := (others => '0');
             mul_fp := (others => '0');
             if is_ml = '1' then -- ml operations with integers
-                if opcode(3) = '1' then 
-                    output <= (others => '0'); -- assuming that the operation is invalid
-                elsif opcode(0) = '1' then -- leaky relu
+                if opcode(0) = '1' then 
+                    output <= multiply_result(31 downto 0); -- rd = r1 * r2
+                elsif opcode(1) = '1' then -- leaky relu
                     if operand_1(31) = '0' then -- rd = r1
                         output <= operand_1;
                     else
-                        output <= multiply_result(31 downto 0); -- rd = r1 * r2
+                        output <= (others => '0'); -- assuming that the operation is invalid
                     end if;
                 else -- macc
                     output <= std_logic_vector(unsigned(multiply_result(31 downto 0)) + unsigned(operand_3));
                 end if;
-            else -- integer operations
+            else -- normal operations
                 case alu_opcode is
                     when "0000" => -- add
                         alu_output <= std_logic_vector(unsigned(operand_1) + unsigned(operand_2)); 
