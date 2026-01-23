@@ -3,20 +3,17 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity vec_reg is
-  Port (rst : in std_logic; -- active low
+    Port( rst : in std_logic; -- active low
         clk : in std_logic;
         en : in std_logic; -- active low
-        is_flt : in std_logic;
-        vd_data_in : std_logic_vector ( 127 downto 0 );
-        vd1_in : in std_logic_vector( 4 downto 0 );
-        vd2_in : in std_logic_vector ( 3 downto 0 );
-        v1 : in std_logic_vector( 4 downto 0 );
-        v2 : in std_logic_vector( 4 downto 0 );
-        v1_data : out std_logic_vector ( 127 downto 0 );
-        v2_data : out std_logic_vector ( 127 downto 0 );
-        is_v1_flt : out std_logic;
-        is_v2_flt : out std_logic
-  );
+        write_en : in std_logic; -- write enable for vector load and operations
+        vd_data_in : std_logic_vector ( 127 downto 0 ); -- data to be written to vector register
+        vec_dest : in std_logic_vector( 4 downto 0 ); -- destination of the vector register
+        vec_element : in std_logic_vector ( 3 downto 0 ); -- indicates which elements to be written
+        v1 : in std_logic_vector( 4 downto 0 ); -- source vector register 1
+        v2 : in std_logic_vector( 4 downto 0 ); -- source vector register 2
+        v1_data : out std_logic_vector ( 127 downto 0 ); -- output data of source vector register 1
+        v2_data : out std_logic_vector ( 127 downto 0 )); -- output data of source vector register 2
 end vec_reg;
 
 architecture Behavioral of vec_reg is
@@ -30,7 +27,7 @@ reading_process : process ( rst, clk ) begin
         v1_data <= ( others => '0' );
         v2_data <= ( others => '0' );
     else
-        if rising_edge(clk) then 
+        if rising_edge( clk ) then 
             if en = '0' then
                 v1_data <= vector_reg_file( to_integer( unsigned( v1 )));
                 v2_data <= vector_reg_file( to_integer( unsigned( v2 )));
@@ -42,22 +39,21 @@ reading_process : process ( rst, clk ) begin
     end if;
 end process;
 
-writing_process : process ( clk ) begin
-    if rising_edge( clk ) then
-        if vd2_in(0) = '0' then
-            vector_reg_file( to_integer( unsigned( vd1_in )))( 31 downto 0 ) <= vd_data_in(31 downto 0);
+writing_process : process ( vec_dest, vec_element, vd_data_in ) begin
+    if write_en = '1' then
+        if vec_element(0) = '1' then
+            vector_reg_file( to_integer( unsigned( vec_dest )))( 31 downto 0 ) <= vd_data_in(31 downto 0);
         end if;
-        if vd2_in(1) = '0' then
-            vector_reg_file( to_integer( unsigned( vd1_in )))( 63 downto 32 ) <= vd_data_in(63 downto 32);
+        if vec_element(1) = '1' then
+            vector_reg_file( to_integer( unsigned( vec_dest )))( 63 downto 32 ) <= vd_data_in(63 downto 32);
         end if;
-        if vd2_in(2) = '0' then
-            vector_reg_file( to_integer( unsigned( vd1_in )))( 95 downto 64 ) <= vd_data_in(95 downto 64);
+        if vec_element(2) = '1' then
+            vector_reg_file( to_integer( unsigned( vec_dest )))( 95 downto 64 ) <= vd_data_in(95 downto 64);
         end if;
-        if vd2_in(3) = '0' then
-            vector_reg_file( to_integer( unsigned( vd1_in )))( 127 downto 96 ) <= vd_data_in(127 downto 96);
+        if vec_element(3) = '1' then
+            vector_reg_file( to_integer( unsigned( vec_dest )))( 127 downto 96 ) <= vd_data_in(127 downto 96);
         end if;
     end if;
 end process;
-
 
 end Behavioral;

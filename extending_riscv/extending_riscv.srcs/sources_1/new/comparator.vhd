@@ -1,6 +1,6 @@
 ---------------------------------------
---- To do:
---- 1. Need to add support for floating point comparisons?
+--- Notes:
+--- 1. Floating point comparisons are not part of any standard so it has not been implemented
 ---------------------------------------
 
 library IEEE;
@@ -8,7 +8,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity comparator is
-    Port (value_1 : in STD_LOGIC_VECTOR (31 downto 0);
+    Port(value_1 : in STD_LOGIC_VECTOR (31 downto 0);
         value_2 : in STD_LOGIC_VECTOR (31 downto 0);
         cond_opcode : in STD_LOGIC_VECTOR (2 downto 0);
         branch_condition : out STD_LOGIC);

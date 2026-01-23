@@ -6,15 +6,15 @@ entity register_file is
   port (rst : in std_logic;
     clk : in std_logic;
     en : in std_logic; -- active low
-    r1 : in std_logic_vector( 4 downto 0 );-- Source 1 address
-    r2 : in std_logic_vector( 4 downto 0 );-- Source 2 address
-    r3 : in std_logic_vector( 4 downto 0 );-- Destination address for reading
-    rd_in : in std_logic_vector( 4 downto 0 );-- Destination address for writing
-    rd_data_in : in std_logic_vector( 31 downto 0 );-- Destination data for writing
+    r1 : in std_logic_vector( 4 downto 0 ); -- Source 1 address
+    r2 : in std_logic_vector( 4 downto 0 ); -- Source 2 address
+    r3 : in std_logic_vector( 4 downto 0 ); -- Source 3 address
+    rd_in : in std_logic_vector( 4 downto 0 ); -- Destination address for writing
+    rd_data_in : in std_logic_vector( 31 downto 0 ); -- Destination data for writing
     we : in std_logic;-- write enable
-    r1_data : out std_logic_vector( 31 downto 0 );-- Register value of source 1
-    r2_data : out std_logic_vector( 31 downto 0 );-- Register value of source 2
-    r3_data : out std_logic_vector( 31 downto 0 ) -- Register value of destination for reading
+    r1_data : out std_logic_vector( 31 downto 0 ); -- Register value of source 1
+    r2_data : out std_logic_vector( 31 downto 0 ); -- Register value of source 2
+    r3_data : out std_logic_vector( 31 downto 0 ) -- Register value of source 3
   );
 end register_file;
 
@@ -26,42 +26,32 @@ architecture Behavioral of register_file is
 
 begin
 -- Reading process
-reading :  process (rst, clk) begin
+reading :  process ( rst, clk ) begin
     if rst = '0' then 
         r1_data <= (others => '0');
         r2_data <= (others => '0');
         r3_data <= (others => '0');
-    elsif rising_edge(clk) then 
+    elsif rising_edge( clk ) then 
 --    elsif rising_edge(clk) and stall = '0' then
-        case en is
-            when '0' =>
-                r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
-                r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
-                r3_data <= reg_file( to_integer( unsigned( r3 ) ) );
-            when others =>
-                r1_data<=(others =>'0');
-                r2_data<=(others =>'0');
-                r3_data <= (others => '0');
-        end case;
---      if en='0' then 
---        r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
---  		r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
---  		r3_data <= reg_file( to_integer( unsigned( r3 ) ) );
---  	  else -- if enable is '1'  the outputs are flushed
---  		r1_data<=(others =>'0');
---  		r2_data<=(others =>'0');
---  		r3_data <= (others => '0');
---  	  end if;
+        if en='0' then 
+            r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
+            r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
+            r3_data <= reg_file( to_integer( unsigned( r3 ) ) );
+ 	    else -- if enable is '1'  the outputs are flushed
+--  		r1_data <= (others => '0');
+            r2_data <= (others => '0');
+            r3_data <= (others => '0');
+ 	    end if;
   	end if;
 end process;
 -- Writing process
-writing : process (rst, clk) begin 
+writing : process ( rst, we, rd_in, rd_data_in ) begin 
     if rst = '0' then 
         reg_file( 0 ) <= ( others => '0' ); -- default
         -- Might not need it since we are adding lui
-        reg_file( 30 ) <=  "00100000000000000000000000000000"; -- switches
-        reg_file( 31 ) <=  "00110000000000000000000000000000"; -- display
-    elsif rising_edge(clk) then
+        -- reg_file( 30 ) <=  "00100000000000000000000000000000"; -- switches
+        -- reg_file( 31 ) <=  "00110000000000000000000000000000"; -- display
+    else
         if we = '1' then
             if rd_in /= "00000" then
 --                 reg_file( 0 ) <= ( others => '0' );
