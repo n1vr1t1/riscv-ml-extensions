@@ -1,14 +1,18 @@
 -------------------------------------------------
 -- Notes: 
 -- 1. For flw and fsw, the float bit is not activated because we are writing to the normal register file 
---    and the address is an int, therefore only the alu is used
--- 2. Stall can be uncommented if we are implementing it for any reason
--- 3. ml opcode is  1000001
+--    and the address is an int, therefore only the alu is used to calculate the address which is an int
+-- 2. ml opcode is  1000001
+-- 3. vector operations 1010111, vector load 0000111, vector store 0100111
+-- 
 
 -- To do:
--- 1. add path from comparator that gives out 1 if the condition is true, else 0 for code checks (NO) 
--- The alu gives back the value that satisfies the condition
--- 2. add if block for immediate operations
+-- 1. 
+-- 2. check if all instructions match the rest of the datapath
+-- 3. add if block for immediate operations
+-- 4. convert a and b select to 2 bits for vector operations
+-- 5. sync the float operations to the alu
+-- 6. add float to int and int to float conversions
 ---------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -17,7 +21,7 @@ entity decoder is
     Port (rst : in std_logic;
 --        stall : in std_logic;
         clk : in std_logic;
-    	flush : in std_logic; --active low
+    	flush : in std_logic; -- active low
     	opcode : in std_logic_vector(6 downto 0);
 		funct7 : in std_logic_vector(6 downto 0);
 		funct3 : in std_logic_vector(2 downto 0);
@@ -61,7 +65,7 @@ process (rst, clk) begin
 	    else
 			conditional_opcode <= "111"; -- default for when we dont have a branch instruction
 			case opcode is
-				when "0000011" | "0000111" => -- load from memory
+				when "0000011" => -- load from memory to register file
 					opclass <= "00001";
 					operation_code <= "0000"; -- add
 					a_select <= '0';
@@ -69,14 +73,26 @@ process (rst, clk) begin
 					vpu_en <= '0'; -- does not use the values from the vector register therefore the vpu does not need to be activated
 					fpu_en <= '0';
 					mlu_en <= '0';
-					if funct3 = "110" then -- condition to load from memory into the vector register 
-				-- neither ints nor floats make use of 110 for the funct3 value, 
-				--- so we assume that it can only be associated to a vector instruction
-						vec_reg_en <= '1';
-					else -- the check for b,w,q is not done in this implementation
-						vec_reg_en <= '0';
-					end if;
-				when "0100011" | "0100111" => -- store into memory
+					vec_reg_en <= '0';
+				when "0000111" => -- load from memory to vector register
+					opclass <= "00001";
+					operation_code <= "0000"; -- add
+					a_select <= '0';
+					b_select <= '1'; -- for vle, the immediate is 0, and for flw the immediate is taken from the instruction
+					vpu_en <= '0'; -- does not use the values from the vector register therefore the vpu does not need to be activated
+					fpu_en <= '0';
+					mlu_en <= '0';
+					vec_reg_en <= '1';
+				when "0100011" => -- store into memory
+					opclass <= "00010";
+					operation_code <= "0000"; -- add
+					a_select <= '0';
+					b_select <= '1'; -- always 1 because the second value is taken from the immediate generator
+					vpu_en <= '0';
+					fpu_en <= '0';
+					mlu_en <= '0';
+					vec_reg_en <= '0';
+				when "0100111" => -- store into memory from vector register
 					opclass <= "00010";
 					operation_code <= "0000"; -- add
 					a_select <= '0';
@@ -86,7 +102,6 @@ process (rst, clk) begin
 					mlu_en <= '0';
 					vec_reg_en <= '0'; -- vector register is not written
 				when "0010011" => -- immediate
-					operation_code <= "0000"; -- could be changed to have operations with immediates
 					opclass <= "00100";
 					a_select <= '0';
 					b_select <= '1';
@@ -94,6 +109,17 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 					vec_reg_en <= '0';
+					case funct3 is 
+						when "000" => operation_code <= "0000"; -- addi
+						when "001" => operation_code <= "1101"; -- slli
+						when "010" => operation_code <= "0011"; -- slti
+						-- when "011" => -- sltiu (not implemented)
+						when "100" => operation_code <= "1000"; -- xori
+						when "101" => operation_code <= "1110"; -- srli
+						when "110" => operation_code <= "0110"; -- ori
+						when "111" => operation_code <= "0111"; -- andi
+						when others => operation_code <= "0000"; -- add by default
+					end case;
 				when "0110011" => -- operation
 					opclass <= "00100";
 					a_select <= '0';
@@ -102,57 +128,43 @@ process (rst, clk) begin
 					vpu_en <= '0';
 					vec_reg_en <= '0';
 					mlu_en <= '0';
-					case funct3 is
-						when "000" =>
-							case funct7 is
-								when "0000000" =>
-									operation_code <= "0000"; -- add
-								when "0100000" =>
-									operation_code <= "0001"; -- sub
-								when "0000001" =>
-									operation_code <= "0010"; -- mul
-								when others =>
-									operation_code <= "1111"; -- invalid operation
+					case funct7 is
+						when "0000000" =>
+							case funct3 is
+								when "000" => operation_code <= "0000"; -- add
+								when "001" => operation_code <= "1101"; -- sll
+								when "010" => operation_code <= "0011"; -- set less than
+								-- when "011" => -- set less than unsigned (not implemented)
+								when "100" => operation_code <= "1000"; -- xor
+								when "101" => operation_code <= "1110"; -- srl
+								when "110" => operation_code <= "0110"; -- or
+								when "111" => operation_code <= "0111"; -- and
+								when others => operation_code <= "1111"; -- invalid operation
 							end case;
-						when "001" =>
-							if funct7 = "0000000" then -- sll
-								operation_code <= "1101";
-							else 
-							   operation_code <= "1111"; -- invalid operation
-							end if;
-						when "010" =>
-							case funct7 is
-								when "0000000" => -- set less than
-									operation_code <= "0011";
-								when "0000001" => -- set greater then
-									operation_code <= "1011";
-								when "0000010" => -- set less than or equal to
-									operation_code <= "0100";
-								when "0000011" => -- set greater than or equal to
-									operation_code <= "1010";
-								when "0000100" => -- set if equal
-									operation_code <= "0101";
-								when others =>
-									operation_code <= "1111"; -- invalid operation
+						when "0000001" =>
+							case funct3 is
+								when "000" => operation_code <= "0010"; -- mul
+								when "100" => operation_code <= "1001"; -- div
+								when others => operation_code <= "1111"; -- invalid operation
 							end case;
-						-- when "011" => --sltu -- not implemented?
-						when "100" => -- xor
-							case funct7 is
-								when "0000000" => -- xor
-									operation_code <= "1000";
-								when "0000001" => -- div
-									operation_code <= "1001";
-								when others =>
-									operation_code <= "1111"; -- invalid operation
+						when "0000010" =>
+							case funct3 is
+								when "000" => operation_code <= "0001"; -- set less than and equal
+								when "001" => operation_code <= "0001"; -- set if equal
+								when "010" => operation_code <= "0001"; -- set great than or equal
+								when "011" => operation_code <= "0001"; -- set greater then
+								when "100" => -- macc/madd
+									mlu_en <= '1';
+									operation_code <= "0001"; 
+								when "101" => -- leaky relu
+									mlu_en <= '1';
+									operation_code <= "0010"; 
+								when others => operation_code <= "1111"; -- invalid operation
 							end case;
-						when "101" => -- shift right
-							operation_code <= "1110"; -- srl and sra both mapped to same code
-							--funct7 = "0000000" then -- shift right logical (srl)
-				    		-- funct7 = "0100000" then  -- shift right arthmethic (sra)
-						when "110" => -- or
-							operation_code <= "0110";
-						when others => -- "111" -- and
-							operation_code <= "0111";
+						when "0100000" =>
+							operation_code <= "0001"; -- sub
+						when others =>
+							operation_code <= "1111"; -- invalid operation
 					end case;
 				when "1100011" => -- branch
 					opclass <= "01000";
@@ -167,6 +179,16 @@ process (rst, clk) begin
 				when "1101111" => -- jump and link
 					opclass <= "10000";
 					a_select <= '1';
+					b_select <= '1';
+					operation_code <= "0000";
+					conditional_opcode <= "110";
+					vpu_en <= '0';
+					vec_reg_en <= '0';
+					fpu_en <= '0';
+					mlu_en <= '0';
+				when "1100111" => -- jump and link register
+					opclass <= "10000";
+					a_select <= '0';
 					b_select <= '1';
 					operation_code <= "0000";
 					conditional_opcode <= "110";
@@ -191,52 +213,37 @@ process (rst, clk) begin
 					vpu_en <= '0';
 					vec_reg_en <= '0';
 					mlu_en <= '0';
-					case funct3 is
-						when "111" => 
-							case funct7 is
-								when "0000000" => -- fadd
+					case funct7 is
+						when "0000000" => operation_code <= "0000"; -- fadd
+						when "0000010" => 
+							mlu_en <= '1';
+							case funct3
+								when "010" =>
+									operation_code <= "0010"; -- leaky relu
+								when "111" => 
+									operation_code <= "0001"; -- fmadd
+								when others =>
 									operation_code <= "0000";
-								when "0000100" => -- fsub
-									operation_code <= "0001";
-								when "0001000" => -- fmul
-									operation_code <= "0010";
-								when others =>
-									operation_code <= "1111";
 							end case;
-						when "000" => 
-							case funct7 is
-								when "1110000" => -- int to float
-									operation_code <= "0110";
-								when "1111000" => -- float to int
-									operation_code <= "0111";
-								when "1010000" => -- fle
-									operation_code <= "0100"; 
-								when others =>
-									operation_code <= "1111";
-							end case;
-						when "010" => -- feq 
-							operation_code <= "0101";
-						when "001" => -- flt
-							operation_code <= "0011";
-						when others =>
-							operation_code <= "1111";
-					end case;
-				when "1000001" => -- ml operations
-					a_select <= '0';
-					b_select <= '0';
-					fpu_en <= '0';
-					mlu_en <= '1';
-					vpu_en <= '0';
-					vec_reg_en <= '0';
-					opclass <= "00100";
-					case funct3 is
-						when "000" => -- mac
-							operation_code <= "0000";
-						when "001" => -- leaky relu
-							operation_code <= "0001";
-						when others =>
-							mlu_en <= '0';
-							operation_code <= "1111";
+						when "0000100" => operation_code <= "0001"; -- fsub
+						when "0001000" => operation_code <= "0010"; -- fmul
+						when "0010100" =>
+							if funct3(0) = '1' then -- 001
+								operation_code <= "0100"; -- fmax
+							else
+								operation_code <= "0011"; -- fmin
+							end if;
+						when "1010000" =>
+							if funct3(1) = '1' then -- 010
+								operation_code <= "0110"; -- feq
+							elsif funct3(0) = '1' then -- 001
+								operation_code <= "0011"; -- flt
+							else
+								operation_code <= "0100"; -- fgt
+							end if;
+						when "1110000" => operation_code <= "0111"; -- fmv.x.w (int to float)
+						when "1111000" => operation_code <= "1000"; -- fmv.w.x (float to int)
+						when others => operation_code <= "1111";
 					end case;
 				when "1010111" => -- vector operations
 					vpu_en <= '1';
@@ -246,7 +253,7 @@ process (rst, clk) begin
 					a_select <= '0';
 					b_select <= '0';
 					case funct3 is 
-						when "000" | "100" => -- vector-vector (int)/ vector-scalar (int)
+						when "000" | "100" => -- int vector-vector/scalar(from register)
 							fpu_en <= '0';
 							mlu_en <= '0';
 							case funct6 is
