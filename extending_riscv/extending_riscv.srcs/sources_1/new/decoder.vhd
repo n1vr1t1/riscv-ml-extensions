@@ -54,7 +54,7 @@ process (rst, clk) begin
             vec_reg_en <= '0';
 			conditional_opcode  <= (others => '1');
 	    else
-			conditional_opcode <= "111"; -- default for when we dont have a branch instruction
+			conditional_opcode <= (others => '1'); -- default for when we dont have a branch instruction
 			case opcode is
 				when "0000011" => -- load from memory to register file
 					opclass <= "00001";
@@ -241,7 +241,6 @@ process (rst, clk) begin
 					mlu_en <= '0';
 					vec_reg_en <= '1';
 					opclass <= "00100";
-					conditional_opcode <= "111";
 					b_select <= "10"; -- for vector operations, operand 2 is always from the vector register
 					case funct6 is
 						when "000000" =>  -- vadd
@@ -567,7 +566,6 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 					operation_code <= "1111";
-					conditional_opcode <= "111";
 			end case;
 		end if;
 	else 
@@ -578,7 +576,7 @@ process (rst, clk) begin
 		fpu_en <= '0';
         mlu_en <= '0';
 		operation_code <= "1111";
-		conditional_opcode<="111";
+		conditional_opcode <= (others => '1');
 	end if;
 end process;
 end Behavioral;
