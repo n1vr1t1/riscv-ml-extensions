@@ -8,10 +8,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity comparator is
-    Port(value_1 : in STD_LOGIC_VECTOR (31 downto 0);
+    Port( value_1 : in STD_LOGIC_VECTOR (31 downto 0);
         value_2 : in STD_LOGIC_VECTOR (31 downto 0);
         cond_opcode : in STD_LOGIC_VECTOR (2 downto 0);
-        branch_condition : out STD_LOGIC);
+        branch_condition : out STD_LOGIC );
 end comparator;
 
 architecture Behavioral of comparator is
