@@ -1,6 +1,6 @@
 ---------------------------------------
 -- Notes:
--- 1. Floating point comparisons are not part of any standard so it has not been implemented
+-- Floating point comparisons are not part of any standard so it has not been implemented
 ---------------------------------------
 
 library IEEE;
@@ -17,46 +17,45 @@ end comparator;
 architecture Behavioral of comparator is
 begin
 process (value_1 , value_2 , cond_opcode) begin
-    if cond_opcode = "110" then --jump and link
-	   branch_condition <=  '1';
-    elsif cond_opcode = "000" then  --equal
-       	if value_1 = value_2 then
-           	branch_condition <=  '1';
-       	else
-           	branch_condition <=  '0';
-       	end if;
-    elsif cond_opcode = "001" then --not equal
-       	if value_1 =  value_2 then
-           	branch_condition <=  '0';
-       	else
-           	branch_condition <=  '1';
-       	end if;
-    elsif cond_opcode = "010" then --less than
-       	if value_1 < value_2 then
-			branch_condition <=  '1';
-		else
+	case cond_opcode is
+		when "110" => branch_condition <=  '1'; -- jump and link
+		when "000" => -- branch if equal
+			if value_1 = value_2 then
+				branch_condition <=  '1';
+			else
+				branch_condition <=  '0';
+			end if;
+		when "001" => -- branch if not equal
+			if value_1 =  value_2 then
+				branch_condition <=  '0';
+			else
+				branch_condition <=  '1';
+			end if;
+    	when "010" => -- branch if less than
+			if value_1 < value_2 then
+				branch_condition <=  '1';
+			else
+				branch_condition <=  '0';
+			end if;
+    	when "011" => -- branch if greater than
+			if value_1 >= value_2 then
+				branch_condition <=  '1';
+			else
+				branch_condition <=  '0';
+			end if;
+    	when "100" then  -- branch if less than or equal
+			if value_1 <= value_2 then
+				branch_condition <=  '1';
+			else 
 			branch_condition <=  '0';
-		end if;
-    elsif cond_opcode = "011" then --greater than
-       	if value_1 >= value_2 then
-			branch_condition <=  '1';
-		else
-			branch_condition <=  '0';
-		end if;
-    elsif cond_opcode = "100" then   --less than or equal
-		if value_1 <= value_2 then
-			branch_condition <=  '1';
-		else 
-		  branch_condition <=  '0';
-		end if;
-    elsif cond_opcode = "101" then --greater than or equal
-       	if value_1 >= value_2 then
-			branch_condition <=  '1';
-		else
-			branch_condition <=  '0';
-		end if;
-    else
-        branch_condition <=  '0';
-    end if;
+			end if;
+    	when "101" then -- branch if greater than or equal
+			if value_1 >= value_2 then
+				branch_condition <=  '1';
+			else
+				branch_condition <=  '0';
+			end if;
+		when others => branch_condition <=  '0';
+    end case;
 end process;
 end Behavioral;
