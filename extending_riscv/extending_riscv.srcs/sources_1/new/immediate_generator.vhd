@@ -3,14 +3,14 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity immediate_generator is
-    Port ( rst : in std_logic;
+    Port (rst : in std_logic;
           clk : in std_logic;
 --          stall : in std_logic;
           flush : in std_logic; --active low
-          opcode : in STD_LOGIC_VECTOR ( 6 downto 0 );
-          funct3 : in STD_LOGIC_VECTOR ( 2 downto 0 );
-          instruction : in STD_LOGIC_VECTOR ( 31 downto 7 ); -- reduce the instruction signal to exclude opcode part
-          immediate : out STD_LOGIC_VECTOR ( 31 downto 0 ));
+          opcode : in STD_LOGIC_VECTOR( 6 downto 0 );
+          funct3 : in STD_LOGIC_VECTOR( 2 downto 0 );
+          instruction : in STD_LOGIC_VECTOR( 31 downto 7 ); -- reduce the instruction signal to exclude opcode part
+          immediate : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end immediate_generator;
 
 architecture Behavioral of immediate_generator is
