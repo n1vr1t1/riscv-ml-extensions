@@ -8,8 +8,8 @@
 
 -- To do:
 -- 1. 
--- 2. check if all instructions match the rest of the datapath
--- 3. add if block for immediate operations
+-- 2. check if vector instructions match the rest of the datapath
+-- 3. 
 -- 4. convert a and b select to 2 bits for vector operations
 -- 5. sync the float operations to the alu
 -- 6. add float to int and int to float conversions
@@ -27,8 +27,8 @@ entity decoder is
 		funct3 : in std_logic_vector(2 downto 0);
         opclass : out STD_LOGIC_VECTOR (4 downto 0);
         operation_code : out STD_LOGIC_VECTOR (3 downto 0); -- used by alu, fpu and mlu
-        a_select : out STD_LOGIC;
-        b_select : out STD_LOGIC;
+        a_select :out STD_LOGIC_VECTOR (1 downto 0);
+        b_select : out STD_LOGIC_VECTOR (1 downto 0);
         conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0);
         fpu_en : out std_logic; -- indicates that the operation using the fpu (floating point unit)
         vpu_en : out std_logic; -- indicates that the operation using the vpu (vector processing unit)
@@ -44,8 +44,8 @@ process (rst, clk) begin
 	if rst = '0' then 
 		opclass <= (others => '0');
 		operation_code  <= (others => '0');
-		a_select <= '0';
-		b_select <= '0'; 
+		a_select <= "00";
+		b_select <= "00"; 
 		fpu_en <= '0';
 		vpu_en <= '0';
         mlu_en <= '0';
@@ -55,8 +55,8 @@ process (rst, clk) begin
 		if flush = '1' then
             opclass <= (others => '0');
 			operation_code  <= (others => '1');
-			a_select <= '0';
-			b_select <= '0'; 
+			a_select <= "00";
+			b_select <= "00"; 
 			fpu_en <= '0';
             vpu_en <= '0';
             mlu_en <= '0';
@@ -68,8 +68,8 @@ process (rst, clk) begin
 				when "0000011" => -- load from memory to register file
 					opclass <= "00001";
 					operation_code <= "0000"; -- add
-					a_select <= '0';
-					b_select <= '1'; -- for vle, the immediate is 0, and for flw the immediate is taken from the instruction
+					a_select <= "00";
+					b_select <= "01"; -- for vle, the immediate is 0, and for flw the immediate is taken from the instruction
 					vpu_en <= '0'; -- does not use the values from the vector register therefore the vpu does not need to be activated
 					fpu_en <= '0';
 					mlu_en <= '0';
@@ -77,8 +77,8 @@ process (rst, clk) begin
 				when "0000111" => -- load from memory to vector register
 					opclass <= "00001";
 					operation_code <= "0000"; -- add
-					a_select <= '0';
-					b_select <= '1'; -- for vle, the immediate is 0, and for flw the immediate is taken from the instruction
+					a_select <= "00";
+					b_select <= "01"; -- for vle, the immediate is 0, and for flw the immediate is taken from the instruction
 					vpu_en <= '0'; -- does not use the values from the vector register therefore the vpu does not need to be activated
 					fpu_en <= '0';
 					mlu_en <= '0';
@@ -86,8 +86,8 @@ process (rst, clk) begin
 				when "0100011" => -- store into memory
 					opclass <= "00010";
 					operation_code <= "0000"; -- add
-					a_select <= '0';
-					b_select <= '1'; -- always 1 because the second value is taken from the immediate generator
+					a_select <= "00";
+					b_select <= "01"; -- always 1 because the second value is taken from the immediate generator
 					vpu_en <= '0';
 					fpu_en <= '0';
 					mlu_en <= '0';
@@ -95,16 +95,16 @@ process (rst, clk) begin
 				when "0100111" => -- store into memory from vector register
 					opclass <= "00010";
 					operation_code <= "0000"; -- add
-					a_select <= '0';
-					b_select <= '1'; -- always 1 because the second value is taken from the immediate generator
+					a_select <= "00";
+					b_select <= "01"; -- always 1 because the second value is taken from the immediate generator
 					vpu_en <= '0';
 					fpu_en <= '0';
 					mlu_en <= '0';
 					vec_reg_en <= '0'; -- vector register is not written
 				when "0010011" => -- immediate
 					opclass <= "00100";
-					a_select <= '0';
-					b_select <= '1';
+					a_select <= "00";
+					b_select <= "01";
 					vpu_en <= '0';
 					fpu_en <= '0';
 					mlu_en <= '0';
@@ -122,8 +122,8 @@ process (rst, clk) begin
 					end case;
 				when "0110011" => -- operation
 					opclass <= "00100";
-					a_select <= '0';
-					b_select <= '0';
+					a_select <= "00";
+					b_select <= "00";
 					fpu_en <= '0';
 					vpu_en <= '0';
 					vec_reg_en <= '0';
@@ -168,8 +168,8 @@ process (rst, clk) begin
 					end case;
 				when "1100011" => -- branch
 					opclass <= "01000";
-					a_select <= '1';
-					b_select <= '1';
+					a_select <= "01";
+					b_select <= "01";
 					conditional_opcode <= funct3;
 					operation_code <= "0000";
 					vpu_en <= '0';
@@ -178,8 +178,8 @@ process (rst, clk) begin
 					mlu_en <= '0';
 				when "1101111" => -- jump and link
 					opclass <= "10000";
-					a_select <= '1';
-					b_select <= '1';
+					a_select <= "01";
+					b_select <= "01";
 					operation_code <= "0000";
 					conditional_opcode <= "110";
 					vpu_en <= '0';
@@ -188,8 +188,8 @@ process (rst, clk) begin
 					mlu_en <= '0';
 				when "1100111" => -- jump and link register
 					opclass <= "10000";
-					a_select <= '0';
-					b_select <= '1';
+					a_select <= "00";
+					b_select <= "01";
 					operation_code <= "0000";
 					conditional_opcode <= "110";
 					vpu_en <= '0';
@@ -199,16 +199,16 @@ process (rst, clk) begin
 				when "0110111" => -- lui
 					opclass <= "00100";
 					operation_code <= "1100";
-					a_select <= '0';
-					b_select <= '1';
+					a_select <= "00";
+					b_select <= "01";
 					fpu_en <= '0';
 					vpu_en <= '0';
 					vec_reg_en <= '0';
 					mlu_en <= '0';
 				when "1010011" => -- float operations
 					opclass <= "00100";
-					a_select <= '0';
-					b_select <= '0';
+					a_select <= "00";
+					b_select <= "00";
 					fpu_en <= '1';
 					vpu_en <= '0';
 					vec_reg_en <= '0';
@@ -247,80 +247,331 @@ process (rst, clk) begin
 					end case;
 				when "1010111" => -- vector operations
 					vpu_en <= '1';
+					mlu_en <= '0';
 					vec_reg_en <= '1';
 					opclass <= "00100";
 					conditional_opcode <= "111";
-					a_select <= '0';
-					b_select <= '0';
-					case funct3 is 
-						when "000" | "100" => -- int vector-vector/scalar(from register)
-							fpu_en <= '0';
-							mlu_en <= '0';
-							case funct6 is
-								when "000000" => operation_code <= "0000"; -- vadd.vv
-								when "000010" => operation_code <= "0001"; -- vsub.vv
-								when "011011" => operation_code <= "0011"; -- vslt.vv
-								when "011101" => operation_code <= "0100"; -- vsle.vv
-								when "011111" => operation_code <= "1011"; -- vsgt.vv
-								when "011000" => operation_code <= "0101"; -- veq.vv
-								when "001001" => operation_code <= "0111"; -- vand.vv
-								when "001010" => operation_code <= "0110"; -- vor.vv
-								when "001011" => operation_code <= "1000"; -- vxor.vv
-								when "100001" => operation_code <= "1001"; -- vdiv.vv
-								when "100101" => operation_code <= "1101"; -- vsll.vv
-								when "101000" => operation_code <= "1110"; -- vsrl.vv
-								when "101101" => -- vmacc.vv
-									mlu_en <= '1';
-									operation_code <= "0000";
-								when others => operation_code <= "1111";
+					b_select <= "10"; -- for vector operations, operand 2 is always from the vector register
+					case funct6 is
+						when "000000" =>  -- vadd
+							operation_code <= "0000"; -- add
+							case funct3 is
+								when "000" => -- vadd.vv
+									fpu_en <= '0';
+									a_select <= "10";
+								when "001" => -- vfadd.vv
+									fpu_en <= '1';
+									a_select <= "10";
+								when "011" => -- vadd.vi
+									fpu_en <= '0';
+									a_select <= "11";
+								when "100" => -- vadd.vx
+									fpu_en <= '0';
+									a_select <= "00";
+								when "101" => -- vfadd.vf
+									a_select <= "00";
+									fpu_en <= '1';
+								when others => 
+									a_select <= "00";
+									fpu_en <= '0';
 							end case;
-						when "001" | "101" => -- vector-vector (float)
+						when "000010" =>  -- vsub
+							operation_code <= "0001"; -- sub
+							case funct3 is
+								when "000" => -- vsub.vv
+									fpu_en <= '0';
+									a_select <= "10";
+								when "001" => -- vfsub.vv
+									fpu_en <= '1';
+									a_select <= "10";
+								when "100" => -- vsub.vx
+									a_select <= "00";
+									fpu_en <= '0';
+								when "101" => -- vfsub.vf
+									a_select <= "00";
+									fpu_en <= '1';
+								when others => 
+									a_select <= "00";
+									fpu_en <= '0';
+							end case;
+						when "100100" =>  -- vfmul
 							fpu_en <= '1';
-							mlu_en <= '0';
-							case funct6 is
-								when "000000" => operation_code <= "0000"; -- vfadd.vv / vfadd.vf
-								when "000010" => operation_code <= "0001"; -- vfsub.vv / vfsub.vf
-								when "100100" => operation_code <= "0010"; -- vfmul.vv / vfmul.vf
-								when "000100" => operation_code <= "0011"; -- vfmin.vv / vfmin.vf (same as vmflt)
-								when "000110" => operation_code <= "0100"; -- vfmax.vv / vfmax.vf (same as vmfgt)
-								when "011000" => operation_code <= "0110"; -- vmfeq.vv / vmfeq.vf
-								when "011011" => operation_code <= "0011"; -- vmflt.vv / vmflt.vf
-								when "011001" => operation_code <= "0101"; -- vmfle.vv / vmfle.vf
-								when "011101" => operation_code <= "0100"; -- vmfgt.vv / vmfgt.vf
-								when "101100" => -- vfmacc.vv / vfmacc.vf
-									mlu_en <= '1';
-									operation_code <= "0000"; 
+							operation_code <= "0010"; -- mul
+							case funct3 is
+								when "001" => -- vfmul.vv
+									a_select <= "10";
+								when "101" => -- vfmul.vf
+									a_select <= "00";
+								when others => 
+									a_select <= "00";
+							end case;
+						when "000100" =>  -- vfmin (same as vmflt)
+							fpu_en <= '1';
+							case funct3 is
+								when "001" => -- vfmin.vv
+									a_select <= "10";
+								when "101" => -- vfmin.vf
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "000101" =>  -- vmin
+							fpu_en <= '0';
+							operation_code <= "0011"; -- slt
+							case funct3 is
+								when "000" => -- vmin.vv
+									a_select <= "10";
+								when "100" => -- vmin.vx
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "000111" =>  -- vmax
+							fpu_en <= '0';
+							operation_code <= "1010"; -- sgt
+							case funct3 is
+								when "000" => -- vmax.vv
+									a_select <= "10";
+								when "100" => -- vmax.vx
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "000110" =>  -- vfmax (same as vmfgt)
+							fpu_en <= '1';
+							operation_code <= "0100";
+							case funct3 is
+								when "001" => -- vfmax.vv
+									a_select <= "10";
+								when "101" => -- vfmax.vf
+									a_select <= "00";
 								when others => operation_code <= "1111";
 							end case;
-						when "010" | "110" => -- vmul.vv/vmul.vx (funct7 = "1001010")
+						when "011011" => -- lt
+							operation_code <= "0011"; --set if less then
+							case funct3 is
+								when "000" => -- vmslt.vv
+									a_select <= "10";
+									fpu_en <= '0';
+								when "001" => -- vmflt.vv
+									a_select <= "10";
+									fpu_en <= '1';
+								when "100" => -- vmslt.vx
+									a_select <= "00";
+									fpu_en <= '0';
+								when "101" => -- vmflt.vf
+									a_select <= "00";
+									fpu_en <= '1';
+								when others => 
+									a_select <= "00";
+									fpu_en <= '0';
+							end case;
+						when "011101" => -- vmsle & vmfgt
+							operation_code <= "0100";
+							case funct3 is
+								when "000" => -- vmsle.vv
+									a_select <= "10";
+									fpu_en <= '0';
+								when "011" => -- vmsle.vi
+									a_select <= "11";
+									fpu_en <= '0';
+								when "100" => -- vmsle.vx
+									a_select <= "00";
+									fpu_en <= '0';
+								when "101" => -- vmfgt.vf
+									a_select <= "00";
+									fpu_en <= '1';
+								when others => 
+									a_select <= "00";
+									fpu_en <= '0';
+							end case;
+						-- when "011100" => -- ne
+						-- 	fpu_en <= '1';
+						-- 	case funct3 is
+						-- 		when "001" => -- vmfne.vv
+						-- 			a_select <= "10";
+						-- 		when "101" => -- vmfne.vf
+						-- 			a_select <= "00";
+						-- 		when others => operation_code <= "1111";
+						-- 	end case;
+						when "011111" => -- vmsgt
 							fpu_en <= '0';
-							mlu_en <= '0';
-							operation_code <= "0010";
-						when "011" => -- vector-immediate
-							fpu_en <= '0';
-							mlu_en <= '0';
-							b_select <= '1';
-							case funct6 is
-								when "000000" => operation_code <= "0000"; -- vadd.vi
-								when "000011" => operation_code <= "0001"; -- vrsub.vi 
-								when "001001" => operation_code <= "0111"; -- vand.vi
-								when "001010" => operation_code <= "0110"; -- vor.vi
-								when "001011" => operation_code <= "1000"; -- vxor.vi
-								when "011000" => operation_code <= "0101"; -- veq.vi
-								when "101000" => operation_code <= "1110"; -- vsrl.vi
+							case funct3 is
+								when "011" => -- vmsgt.vi
+									a_select <= "11";
+									operation_code <= "1011";
+								when "100" => -- vmsgt.vx
+									a_select <= "00";
+									operation_code <= "1011";
+								-- when "101" => -- vmfge.vf
+								-- 	a_select <= "10";
+								-- 	fpu_en <= '1';
+								-- 	operation_code <= "0100";
 								when others => operation_code <= "1111";
 							end case;
-						when others => -- invalid instruction
-						opclass <= "00000";
-						vpu_en <= '0';						
-						fpu_en <= '0';
-						mlu_en <= '0';
-						operation_code <= "1111";
+						when "011000" => -- eq
+							case funct3 is
+								when "000" => -- vmseq.vv
+									a_select <= "10";
+									operation_code <= "0101";
+									fpu_en <= '0';
+								when "001" => -- vmfeq.vv
+									operation_code <= "0110";
+									a_select <= "10";
+									fpu_en <= '1';
+								when "011" => -- vmseq.vi
+									operation_code <= "0101";
+									a_select <= "11";
+									fpu_en <= '0';
+								when "100" =>  -- vmseq.vx
+									operation_code <= "0101";
+									a_select <= "00";
+									fpu_en <= '0';
+								when "101" =>  -- vmfeq.vf
+									operation_code <= "0110";
+									a_select <= "00";
+									fpu_en <= '1';
+								when others => 
+									a_select <= "00";
+									fpu_en <= '0';
+									operation_code <= "1111";
+							end case;
+						when "011001" => -- vmfle
+							operation_code <= "0101";
+							fpu_en <= '1';
+							case funct3 is
+								-- when "000" => -- vmsne.vv 
+								-- 	a_select <= "10";
+								-- 	fpu_en <= '0';
+								when "001" => -- vmfle.vv
+									a_select <= "10";
+									-- fpu_en <= '1';
+								-- when "011" => -- vmsne.vi
+								-- 	a_select <= "11";
+								-- 	fpu_en <= '0';
+								-- when "100" => -- vmsne.vx
+								-- 	a_select <= "00";
+								-- 	fpu_en <= '0';
+								when "101" => -- vmfle.vf
+									a_select <= "00";
+									-- fpu_en <= '1';
+								when others => a_select <= "00";
+							end case;
+						when "001001" => -- vand
+							fpu_en <= '0';
+							operational_code <= "0111";
+							case funct3 is
+								when "000" => -- vand.vv
+									a_select <= "10";
+								when "011" => -- vand.vi
+									a_select <= "11";
+								when "100" => -- vand.vx
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "001010" => -- vor
+							fpu_en <= '0';
+							operational_code <= "0110";
+							case funct3 is
+								when "000" =>  -- vor.vv
+									a_select <= "10";
+								when "011" => -- vor.vi
+									a_select <= "11";
+								when "100" => -- vor.vx
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "001011" => -- vxor
+							fpu_en <= '0';
+							operational_code <= "1000";
+							case funct3 is
+								when "000" => -- vxor.vv
+									a_select <= "10";
+								when "011" => -- vxor.vi
+									a_select <= "11";
+								when "100" => -- vxor.vx
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "100001" => -- vdiv
+							fpu_en <= '0';
+							operational_code <= "1001";
+							case funct3 is
+								when "010" => -- vdiv.vv
+									a_select <= "10";
+								when "110" => -- vdiv.vx 
+									a_select <= "00";
+								when others => operation_code <= "1111";
+							end case;
+						when "100101" => -- vsll & vmul
+							fpu_en <= '0';
+							case funct3 is
+								when "000" => -- vsll.vv
+									a_select <= "10";
+									operational_code <= "1101";
+								when "010" => -- vmul.vv
+									a_select <= "10";
+									operational_code <= "0010";
+								when "011" => -- vsll.vi
+									a_select <= "11";
+									operational_code <= "1101";
+								when "100" => -- vsll.vx
+									a_select <= "00";
+									operational_code <= "1101";
+								when "110" => -- vmul.vx
+									a_select <= "00";
+									operational_code <= "0010";
+								when others => 
+									a_select <= "00";
+									operation_code <= "1111";
+							end case;
+						when "101000" => -- vsrl
+							fpu_en <= '0';
+							operation_code <= "1110";
+							case funct3 is
+								when "000" => -- vsrl.vv
+									a_select <= "10";
+								when "011" => -- vsrl.vi
+									a_select <= "11";
+								when "100" => -- vsrl.vx
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "101101" => -- vmadd
+							fpu_en <= '0';
+							mlu_en <= '1';
+							operation_code <= "0001";
+							case funct3 is
+								when "010" => -- vmadd.vv
+									a_select <= "10";
+								when "110" => -- vmadd.vx
+									a_select <= "00";
+								when others => a_select <= "00";
+							end case;
+						when "101100" => -- vmadd / vfmacc
+							mlu_en <= '1';
+							operation_code <= "0000"; 
+							case funct3 is
+								when "001" => -- vfmacc.vv
+									a_select <= "10";
+									fpu_en <= '1';
+								when "010" => -- vmadd.vv
+									a_select <= "10";
+									fpu_en <= '0';
+								when "110" => -- vmadd.vx
+									a_select <= "00";
+									fpu_en <= '0';
+								when "101" => -- vfmacc.vf
+									a_select <= "00";
+									fpu_en <= '1';
+								when others => a_select <= "00";
+							end case;
+						when others => 
+							fpu_en <= '0';
+							a_select <= "00";
+							operation_code <= "1111";
 					end case;
 				when others =>
 					opclass <= "00000";
-					a_select <= '0';
-					b_select <= '0';
+					a_select <= "00";
+					b_select <= "00";
 					vpu_en <= '0';
 					fpu_en <= '0';
 					mlu_en <= '0';
@@ -330,8 +581,8 @@ process (rst, clk) begin
 		end if;
 	else 
 		opclass <= "00000";
-		a_select <= '0';
-		b_select <= '0';
+		a_select <= "00";
+		b_select <= "00";
 		vpu_en <= '0';
 		fpu_en <= '0';
         mlu_en <= '0';
