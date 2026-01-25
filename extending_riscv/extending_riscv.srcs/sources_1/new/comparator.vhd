@@ -1,6 +1,6 @@
 ---------------------------------------
---- Notes:
---- 1. Floating point comparisons are not part of any standard so it has not been implemented
+-- Notes:
+-- 1. Floating point comparisons are not part of any standard so it has not been implemented
 ---------------------------------------
 
 library IEEE;
