@@ -50,7 +50,7 @@ process ( rst, clk ) begin
                     if funct3 = "010" then -- flw
                         immediate( 10 downto 0 ) <= instruction( 30 downto 20 ); 
                         immediate( 31 downto 11 ) <= ( others => instruction( 31 ));
-                    else -- for other instructions, we assume the default 0 immediate this is because for vlm.v,
+                    else -- for other instructions, assuming the default 0 immediate this is because for vlm.v,
 	                    -- we are assuming that the value in the normal register does not need to be operated on to get the correct memory location
                         immediate <= ( others => '0' );
                     end if;
