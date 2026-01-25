@@ -4,15 +4,6 @@
 --    and the address is an int, therefore only the alu is used to calculate the address which is an int
 -- 2. ml opcode is  1000001
 -- 3. vector operations 1010111, vector load 0000111, vector store 0100111
--- 
-
--- To do:
--- 1. 
--- 2. check if vector instructions match the rest of the datapath
--- 3. 
--- 4. convert a and b select to 2 bits for vector operations
--- 5. sync the float operations to the alu
--- 6. add float to int and int to float conversions
 ---------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
