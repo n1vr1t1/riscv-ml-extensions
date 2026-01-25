@@ -3,14 +3,14 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity alu is
-    Port( opcode : in STD_LOGIC_VECTOR (3 downto 0);
-          operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
-          operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
-          operand_3 : in STD_LOGIC_VECTOR (31 downto 0);
+    Port( opcode : in STD_LOGIC_VECTOR( 3 downto 0);
+          operand_1 : in STD_LOGIC_VECTOR( 31 downto 0);
+          operand_2 : in STD_LOGIC_VECTOR( 31 downto 0);
+          operand_3 : in STD_LOGIC_VECTOR( 31 downto 0);
           is_float : in STD_LOGIC; -- indicates if the operation is a floating point
           is_ml : in STD_LOGIC; -- indicates if the operation is a machine learning operation
           en : in STD_LOGIC; -- enable signal to disable the alu when not in use
-          alu_output : out STD_LOGIC_VECTOR (31 downto 0) );
+          alu_output : out STD_LOGIC_VECTOR( 31 downto 0) );
 end alu;
 
 architecture Behavioral of alu is
