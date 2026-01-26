@@ -524,33 +524,26 @@ process (rst, clk) begin
 									a_select <= "00";
 								when others => a_select <= "00";
 							end case;
-						when "101101" => -- vmadd
+						when "101101" => -- vmacc
 							fpu_en <= '0';
 							mlu_en <= '1';
 							operation_code <= "0001";
 							case funct3 is
-								when "010" => -- vmadd.vv
+								when "010" => -- vmacc.vv
 									a_select <= "10";
-								when "110" => -- vmadd.vx
+								when "110" => -- vmacc.vx
 									a_select <= "00";
 								when others => a_select <= "00";
 							end case;
-						when "101100" => -- vmadd / vfmacc
+						when "101100" => -- vfmacc 
 							mlu_en <= '1';
 							operation_code <= "0000"; 
+							fpu_en <= '1';
 							case funct3 is
 								when "001" => -- vfmacc.vv
 									a_select <= "10";
-									fpu_en <= '1';
-								when "010" => -- vmadd.vv
-									a_select <= "10";
-									fpu_en <= '0';
-								when "110" => -- vmadd.vx
-									a_select <= "00";
-									fpu_en <= '0';
 								when "101" => -- vfmacc.vf
 									a_select <= "00";
-									fpu_en <= '1';
 								when others => a_select <= "00";
 							end case;
 						when others => 
