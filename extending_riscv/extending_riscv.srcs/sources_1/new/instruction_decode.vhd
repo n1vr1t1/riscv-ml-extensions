@@ -20,6 +20,7 @@ entity instruction_decode is
 		opcode : out STD_LOGIC_VECTOR( 3 downto 0 ); 
 		a_select : out STD_LOGIC_VECTOR(1 downto 0);
         b_select : out STD_LOGIC_VECTOR(1 downto 0);
+        c_select : out std_logic;
 		conditional_opcode : out STD_LOGIC_VECTOR( 2 downto 0 ); 
 		r1_address : out std_logic_vector( 4 downto 0 );
 		r2_address : out std_logic_vector( 4 downto 0 );
@@ -77,6 +78,7 @@ component decoder is
         operation_code : out STD_LOGIC_VECTOR(3 downto 0);
         a_select :out STD_LOGIC_VECTOR(1 downto 0);
         b_select : out STD_LOGIC_VECTOR(1 downto 0);
+        c_select : out std_logic;
         conditional_opcode : out STD_LOGIC_VECTOR(2 downto 0);
         fpu_en : out std_logic;
         vpu_en : out std_logic;
@@ -136,6 +138,7 @@ decoder_decode : decoder
 		operation_code => opcode,
 		a_select => a_select,
 		b_select => b_select,
+        c_select => c_select,
 		conditional_opcode => conditional_opcode,
 		fpu_en => is_float,
 		vec_reg_en => vec_reg_en,
@@ -161,7 +164,7 @@ process ( clk, rst ) begin
         if flush ='0' then 
             pc_forward <= pc;
             r1_address <= instruction( 19 downto 15 );
-            r2_address <= instruction( 24 downto 20 );
+            r2_address <= instruction( 24 downto 20 ); -- rewrite to have logic for vector write back through operations and store
             r3_address <= instruction( 11 downto 7 );
 		else 
             pc_forward <= ( others => '0' );

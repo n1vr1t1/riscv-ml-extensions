@@ -5,9 +5,7 @@
 --
 -- 
 -- Todo:
--- 1. change inputs to fit the outputs of the previous stage
--- 2. configure macc inputs
--- 5. configure outputs
+-- 1. 
 --------------------------------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -25,6 +23,7 @@ entity execution_stage is
         alu_opcode : in STD_LOGIC_VECTOR( 3 downto 0 );
         a_select : in STD_LOGIC_VECTOR(1 downto 0);
         b_select : in STD_LOGIC_VECTOR(1 downto 0);
+        c_select : in std_logic;
         immediate : in STD_LOGIC_VECTOR( 31 downto 0 );
         is_float : in std_logic;
         is_ml : in std_logic;
@@ -34,6 +33,8 @@ entity execution_stage is
         alu_3_out : out STD_LOGIC_VECTOR( 31 downto 0 );
         alu_4_out : out STD_LOGIC_VECTOR( 31 downto 0 );
         branch_condition : out STD_LOGIC;
+        vec3_data : in std_logic_vector( 127 downto 0 );
+        vec3_out : out std_logic_vector( 127 downto 0 );
         vec_we : in std_logic;
         vec_we_forward : out std_logic;
         source_2 : in std_logic_vector(3 downto 0);
@@ -141,6 +142,7 @@ process ( rst, clk ) begin
 		a_out <= '0';
         b_out <= '0';
         s_out <= (others => '0');
+        vec3_out <= (others => '0');
 		alu1_op_a <= ( others => '0' );
 		alu1_op_b <= ( others => '0' );
 		alu1_op_c <= ( others => '0' );
@@ -171,40 +173,64 @@ process ( rst, clk ) begin
             2_out <= value_2( 15 downto 0 );
             d_out <= d_in;
             o_out <= o_in;
-            alu2_op_a <= vec1_data( 63 downto 32 );
+            vec3_out <= vec3_data;
             alu2_op_b <= vec2_data( 63 downto 32 );
-            alu2_op_c <= ;
-            alu3_op_a <= vec1_data( 95 downto 64 );
+            alu2_op_c <= vec3_data( 63 downto 32 );
             alu3_op_b <= vec2_data( 95 downto 64 );
-            alu3_op_c <= ;
-            alu4_op_a <= vec1_data( 127 downto 96 );
+            alu3_op_c <= vec3_data( 95 downto 64 );
             alu4_op_b <= vec2_data( 127 downto 96 );
-            alu4_op_c <= ;
-            if load_a = '1' then  --  load hazard
+            alu4_op_c <= vec3_data( 127 downto 96 );
+            if load_a = '1' then  --  load hazard for 32 bit data
                 post_load_a <= memory_value;
             else
                 post_load_a <= value_1;
             end if;
-            if load_b = '1' then --load hazard
+            if load_b = '1' then --load hazard for 32 bit data
                 post_load_b <= memory_value;
             else 
                 post_load_b <= value_2;
             end if;
             case a_select is
-                -- when "00" => alu1_op_a <= post_load_a; -- value from register
-                when "01" => alu1_op_a <= p_in; -- program counter
-                when "10" => alu1_op_a <= vec1_data( 31 downto 0 ); -- value from vector register
-                when "11" => alu1_op_a <= immediate; -- immediate
-                when others => alu1_op_a <= post_load_a;
+                -- when "00" => -- value from register
+                    -- alu1_op_a <= post_load_a;
+                    -- alu2_op_a <= post_load_a;
+                    -- alu3_op_a <= post_load_a;
+                    -- alu4_op_a <= post_load_a;
+                when "01" => -- program counter
+                    alu1_op_a <= p_in;
+                    alu1_op_a <= ( others => '0' );
+                    alu2_op_a <= ( others => '0' );
+                    alu3_op_a <= ( others => '0' );
+                    alu4_op_a <= ( others => '0' );
+                when "10" => -- value from vector register
+                    alu1_op_a <= vec1_data( 31 downto 0 ); 
+                    alu2_op_a <= vec1_data( 63 downto 32 );
+                    alu3_op_a <= vec1_data( 95 downto 64 );
+                    alu4_op_a <= vec1_data( 127 downto 96 );
+                when "11" => -- value taken from immediate
+                    alu1_op_a <= immediate;
+                    alu2_op_a <= immediate;
+                    alu3_op_a <= immediate;
+                    alu4_op_a <= immediate;
+                when others => -- by default, the register value is taken
+                    alu1_op_a <= post_load_a;
+                    alu2_op_a <= post_load_a;
+                    alu3_op_a <= post_load_a;
+                    alu4_op_a <= post_load_a;
             end case;
             case b_select is -- selecing operand 2 based on b_select 
                 -- when "00" => alu1_op_b <= value_2;
-                when "01" => alu1_op_b <= immediate; -- immediate
-                when "10" => alu1_op_b <= vec2_data( 31 downto 0 ); -- value from vector register
-                when others => alu1_op_b <= post_load_b; -- value from register
+                when "01" => -- immediate (only for the main alu)
+                    alu1_op_b <= immediate;
+                when "10" => -- value from vector register
+                    alu1_op_b <= vec2_data( 31 downto 0 ); 
+                when others => 
+                    alu1_op_b <= post_load_b; -- value from register
             end case;
-            if load_c = '1' then -- choosing the third operand of the alu
-                alu1_op_c <= memory_value;
+            if c_select = '1' then -- choosing the third operand of the alu
+                alu1_op_c <= vec3_data( 31 downto 0 ); -- vector macc instructions
+            elsif load_c = '1' then
+                alu1_op_c <= memory_value; -- load hazard
             else
                 alu1_op_c <= value_3;
             end if;
@@ -212,7 +238,6 @@ process ( rst, clk ) begin
             alu_opcode_signal <= ( others => '0' );
             is_float_signal <= '0';
             is_ml_signal <= '0';
-            vec_we_forward <= '0';
             vec_signal <= '0';
             conditional_opcode_signal <= ( others => '0' );
             p_out <= ( others => '0' );
@@ -220,6 +245,10 @@ process ( rst, clk ) begin
             2_out <= ( others => '0' );
             d_out <= ( others => '0' );
             o_out <= ( others => '0' );
+            a_out <= '0';
+            b_out <= '0';
+            s_out <= (others => '0');
+            vec3_out <= (others => '0');
             alu1_op_a <= ( others => '0' );
             alu1_op_b <= ( others => '0' );
             alu1_op_c <= ( others => '0' );
@@ -229,8 +258,10 @@ process ( rst, clk ) begin
             alu3_op_a <= ( others => '0' );
             alu3_op_b <= ( others => '0' );
             alu3_op_c <= ( others => '0' );
-            a_out <= '0';
-            b_out <= '0';
+            alu4_op_a <= ( others => '0' );
+            alu4_op_b <= ( others => '0' );
+            alu4_op_c <= ( others => '0' );
+            vec_we_forward <= '0';
             post_load_a <= ( others => '0' );
             post_load_b <= ( others => '0' );
         end if;
