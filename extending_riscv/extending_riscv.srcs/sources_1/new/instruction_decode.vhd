@@ -32,7 +32,8 @@ entity instruction_decode is
 		is_vl : out std_logic;
 		vec_reg_en : out std_logic;
 		vec1_data : out std_logic_vector( 127 downto 0 );
-        vec2_data : out std_logic_vector( 127 downto 0 ));
+		vec2_data : out std_logic_vector( 127 downto 0 );
+        vec3_data : out std_logic_vector( 127 downto 0 ));
 end instruction_decode;
 
 architecture Behavioral of instruction_decode is
@@ -60,8 +61,10 @@ component vec_reg is
         vec_element : in std_logic_vector( 3 downto 0 );
         v1 : in std_logic_vector( 4 downto 0 );
         v2 : in std_logic_vector( 4 downto 0 );
+        v3 : in std_logic_vector( 4 downto 0 );
         v1_data : out std_logic_vector( 127 downto 0 );
-        v2_data : out std_logic_vector( 127 downto 0 ));
+        v2_data : out std_logic_vector( 127 downto 0 );
+        v3_data : out std_logic_vector( 127 downto 0 ));
 end component;
 component decoder is
   	Port ( rst : in std_logic;
@@ -91,8 +94,6 @@ component immediate_generator is
 end component;
 
 -------- CONNECTIONS -----------
-signal v1_input : std_logic_vector(4 downto 0); -- first source address of the vector file 
-
 begin
 
 reg_file_decode: register_file
@@ -117,10 +118,12 @@ vec_file_decode : vec_reg
 		vd_data_in => vec_destination_value,
 		vec_dest => destination_address,
 		vec_element => vec_dest_element,
-		v1 => v1_input,
+		v1 => instruction ( 19 downto 15 ),
 		v2 => instruction( 24 downto 20 ),
+		v3 => instrucrtion( 11 downto 7 ),
 		v1_data => vec1_data,
-		v2_data => vec2_data );
+		v2_data => vec2_data,
+		v3_data => vec3_data );
 
 decoder_decode : decoder 
   Port map( clk => clk,
@@ -146,14 +149,7 @@ imm_gen_decode : immediate_generator
           instruction => instruction( 31 downto 7 ),
           immediate => immediate,
           flush => flush );
-
-vec_file_input_1 : process ( instruction ) begin
-	if instruction(6 downto 0) = "0100111" then -- vector store
-		v1_input <= instruction(11 downto 7);
-	else
-		v1_input <= instruction(19 downto 15);
-	end if;
-end process;
+		  
 -- for signals that need to be forwarded to the next stage without being
 process ( clk, rst ) begin
     if rst = '0' then 
