@@ -6,14 +6,16 @@ entity vec_reg is
     Port( rst : in std_logic; -- active low
         clk : in std_logic;
         en : in std_logic; -- active low
-        write_en : in std_logic; -- write enable for vector load and operations
+        we : in std_logic; -- write enable for vector load and operations
         vd_data_in : std_logic_vector ( 127 downto 0 ); -- data to be written to vector register
         vec_dest : in std_logic_vector( 4 downto 0 ); -- destination of the vector register
         vec_element : in std_logic_vector ( 3 downto 0 ); -- indicates which elements to be written
         v1 : in std_logic_vector( 4 downto 0 ); -- source vector register 1
         v2 : in std_logic_vector( 4 downto 0 ); -- source vector register 2
+        v3 : in std_logic_vector( 4 downto 0 ); -- source vector register 3
         v1_data : out std_logic_vector ( 127 downto 0 ); -- output data of source vector register 1
-        v2_data : out std_logic_vector ( 127 downto 0 )); -- output data of source vector register 2
+        v2_data : out std_logic_vector ( 127 downto 0 ); -- output data of source vector register 2
+        v3_data : out std_logic_vector ( 127 downto 0 )); -- output data of source vector register 3
 end vec_reg;
 
 architecture Behavioral of vec_reg is
@@ -26,21 +28,24 @@ reading_process : process ( rst, clk ) begin
     if rst = '0' then
         v1_data <= ( others => '0' );
         v2_data <= ( others => '0' );
+        v3_data <= ( others => '0' );
     else
         if rising_edge( clk ) then 
             if en = '0' then
                 v1_data <= vector_reg_file( to_integer( unsigned( v1 )));
                 v2_data <= vector_reg_file( to_integer( unsigned( v2 )));
+                v3_data <= vector_reg_file( to_integer( unsigned( v3 )));
             else 
                 v1_data <= ( others => '0' );
                 v2_data <= ( others => '0' );
+                v3_data <= ( others => '0' );
             end if;
         end if;
     end if;
 end process;
 
-writing_process : process ( vec_dest, vec_element, vd_data_in ) begin
-    if write_en = '1' then
+writing_process : process ( vec_dest, vec_element, vd_data_in, we ) begin
+    if we = '1' then
         if vec_element(0) = '1' then
             vector_reg_file( to_integer( unsigned( vec_dest )))( 31 downto 0 ) <= vd_data_in(31 downto 0);
         end if;
