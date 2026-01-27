@@ -47,8 +47,8 @@ entity execution_stage is
         b_out : out std_logic;
         o_in : in STD_LOGIC_VECTOR( 4 downto 0 );
         o_out : out STD_LOGIC_VECTOR( 4 downto 0 );
-        1_out : out STD_LOGIC_VECTOR( 31 downto 0 );
-        2_out : out STD_LOGIC_VECTOR( 15 downto 0 );
+        rs1_out : out STD_LOGIC_VECTOR( 31 downto 0 );
+        rs2_out : out STD_LOGIC_VECTOR( 15 downto 0 );
         load_a : in STD_LOGIC;
         load_b : in STD_LOGIC;
         load_c : in std_logic;
@@ -128,15 +128,15 @@ begin
 -- branch_condition <= branch_condition_signal;
 
 process ( rst, clk ) begin
-	if rst = '0 then
+	if rst = '0' then
 	    alu_opcode_signal <= ( others => '0' );
 	    is_float_signal <= '0';
 	    is_ml_signal <= '0';
         vec_signal <= '0';
 	    conditional_opcode_signal <= ( others => '0' );
         p_out <= ( others => '0' );
-		1_out <= ( others => '0' );
-		2_out <= ( others => '0' );
+		rs1_out <= ( others => '0' );
+		rs2_out <= ( others => '0' );
 		d_out <= ( others => '0' );
 		o_out <= ( others => '0' );
 		a_out <= '0';
@@ -156,8 +156,8 @@ process ( rst, clk ) begin
         alu4_op_b <= ( others => '0' );
         alu4_op_c <= ( others => '0' );
         vec_we_forward <= '0';
-        post_load_a <= ( others => '0' );
-        post_load_b <= ( others => '0' );
+        post_load_a := ( others => '0' );
+        post_load_b := ( others => '0' );
     elsif rising_edge( clk ) then
         if flush ='0' then
             a_out <= a_select( 0 );
@@ -169,8 +169,8 @@ process ( rst, clk ) begin
             vec_we_forward <= vec_we;
             conditional_opcode_signal <= conditional_opcode;
             p_out <= p_in;
-            1_out <= value_1;
-            2_out <= value_2( 15 downto 0 );
+            rs1_out <= value_1;
+            rs2_out <= value_2( 15 downto 0 );
             d_out <= d_in;
             o_out <= o_in;
             vec3_out <= vec3_data;
@@ -181,14 +181,14 @@ process ( rst, clk ) begin
             alu4_op_b <= vec2_data( 127 downto 96 );
             alu4_op_c <= vec3_data( 127 downto 96 );
             if load_a = '1' then  --  load hazard for 32 bit data
-                post_load_a <= memory_value;
+                post_load_a := memory_value;
             else
-                post_load_a <= value_1;
+                post_load_a := value_1;
             end if;
             if load_b = '1' then --load hazard for 32 bit data
-                post_load_b <= memory_value;
+                post_load_b := memory_value;
             else 
-                post_load_b <= value_2;
+                post_load_b := value_2;
             end if;
             case a_select is
                 -- when "00" => -- value from register
@@ -241,8 +241,8 @@ process ( rst, clk ) begin
             vec_signal <= '0';
             conditional_opcode_signal <= ( others => '0' );
             p_out <= ( others => '0' );
-            1_out <= ( others => '0' );
-            2_out <= ( others => '0' );
+            rs1_out <= ( others => '0' );
+            rs2_out <= ( others => '0' );
             d_out <= ( others => '0' );
             o_out <= ( others => '0' );
             a_out <= '0';
@@ -262,8 +262,8 @@ process ( rst, clk ) begin
             alu4_op_b <= ( others => '0' );
             alu4_op_c <= ( others => '0' );
             vec_we_forward <= '0';
-            post_load_a <= ( others => '0' );
-            post_load_b <= ( others => '0' );
+            post_load_a := ( others => '0' );
+            post_load_b := ( others => '0' );
         end if;
 	end if;
 end process;
