@@ -2,10 +2,10 @@
 -- 1. The datapath contains the main alu which is always used for every instruction. 
 --    There are 3 other alus that are activated and used only for vector instructions, 
 --    they perform the exact same operations as the main alu. 
---
+-- 2. Control logic for load hazards are done here
 -- 
 -- Todo:
--- 1. 
+-- 1. check if variable is working for the inputs of comparator and propagation of the signal to main alu
 --------------------------------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -218,7 +218,7 @@ process ( rst, clk ) begin
                     alu3_op_a <= post_load_a;
                     alu4_op_a <= post_load_a;
             end case;
-            case b_select is -- selecing operand 2 based on b_select 
+            case b_select is -- selecting operand 2 based on b_select 
                 -- when "00" => alu1_op_b <= value_2;
                 when "01" => -- immediate (only for the main alu)
                     alu1_op_b <= immediate;

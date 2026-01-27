@@ -1,4 +1,7 @@
-
+-------------------------------------------------------------------
+-- notes: 
+-- 1.
+-------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
@@ -27,12 +30,13 @@ begin
 process (pc, alu_forward_1, alu_forward_2, alu_forward_3, alu_forward_4, opclass, mem_out,
         rd_in, write_vec_i, vc_elem_i) begin
     rd_out <= rd_in;
-    vc_elem_o <= vc_elem_i;
     write_vec_o <= write_vec_i;
+    vc_elem_o <= (others => '1');
     case opclass is
         when "00001" => --load        
             vdata(31 downto 0) <= mem_out;
             vdata(127 downto 32) <= (others => '0');
+            vc_elem_o <= vc_elem_i;
             write_register_file <= not (write_vec_i);
             rd_value <= mem_out;
         when "00100" => --operation
@@ -52,23 +56,5 @@ process (pc, alu_forward_1, alu_forward_2, alu_forward_3, alu_forward_4, opclass
             write_register_file <= '0';
             rd_value <= pc;
     end case;
---    if opclass = "00001" then --load 
---	   write_register_file <= '1';
---	   rd_value <= mem_out;
---	elsif opclass = "00100" then --operation
---	   write_register_file <= '1';
---	   if is_ml = '1' then
---	       rd_value <= mlu_forward;
---	   elsif is_float = '1' then
---	       rd_value <= fpu_forward;
---	   else rd_value <= alu_forward;
---	   end if;
---	elsif opclass = "10000" then --jump and link
---	   write_register_file <= '1';
---       rd_value <= pc;
---	else --branch & store
---	   write_register_file <= '0';
---	   rd_value <= pc;
---	end if;
 end process; 
 end Behavioral;
