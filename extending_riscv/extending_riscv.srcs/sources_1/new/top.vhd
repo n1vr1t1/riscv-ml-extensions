@@ -20,67 +20,77 @@ component instruction_fetch_stage is
         instruction : out STD_LOGIC_VECTOR (31 downto 0));
 end component;
 component instruction_decode is
-    Port (pc_in : in STD_LOGIC_VECTOR (31 downto 0); --forwarded to the next stage without being used
-      instruction : in STD_LOGIC_VECTOR (31 downto 0);
-      destination_value_from_wb : in STD_LOGIC_VECTOR (31 downto 0);
-      destination_address_from_wb : in STD_LOGIC_VECTOR(4 DOWNTO 0);
-      write_enable_from_wb : in STD_LOGIC; 
-      clk : in STD_LOGIC;
-      rst : in STD_LOGIC;
-      flush : in STD_LOGIC; --active high, used fo flushing 
-      pc_out : out STD_LOGIC_VECTOR (31 downto 0);
-      immediate : out STD_LOGIC_VECTOR (31 downto 0);
-      op_class : out STD_LOGIC_VECTOR (4 downto 0);
-      alu_opcode : out STD_LOGIC_VECTOR (3 downto 0); 
-      a_select : out STD_LOGIC; 
-      b_select : out STD_LOGIC;
-      conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0); 
-      r1 : out STD_LOGIC_vector(4 downto 0);
-      r2 : out STD_LOGIC_vector(4 downto 0);
-      r3 : out STD_LOGIC_vector(4 downto 0);
-      s_value_1 : out STD_LOGIC_VECTOR (31 downto 0); 
-      s_value_2 : out STD_LOGIC_VECTOR (31 downto 0);
-      s_value_3 : out STD_LOGIC_VECTOR (31 downto 0);
-      destination_address : out STD_LOGIC_VECTOR(4 DOWNTO 0);
-      is_float : out STD_LOGIC;
-      is_ml : out STD_LOGIC;
-      ml_opcode : out STD_LOGIC);
+    Port (clk : in STD_LOGIC;
+		rst : in STD_LOGIC;
+		flush : in STD_LOGIC; --active high, used fo flushing 
+		pc_in : in STD_LOGIC_VECTOR (31 downto 0); --forwarded to the next stage without being used
+		instruction : in STD_LOGIC_VECTOR (31 downto 0);
+		destination_value_from_wb : in STD_LOGIC_VECTOR (31 downto 0);
+		destination_address_from_wb : in STD_LOGIC_VECTOR(4 DOWNTO 0);
+		write_enable_from_wb : in STD_LOGIC;
+		pc_out : out STD_LOGIC_VECTOR (31 downto 0);
+		immediate : out STD_LOGIC_VECTOR (31 downto 0);
+		operation_code : out STD_LOGIC_VECTOR (4 downto 0);
+		alu_opcode : out STD_LOGIC_VECTOR (3 downto 0); 
+		a_select : out STD_LOGIC; 
+		b_select : out STD_LOGIC;
+		conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0); 
+		r1 : out STD_LOGIC_vector(4 downto 0);
+		r2 : out STD_LOGIC_vector(4 downto 0);
+		r3 : out STD_LOGIC_vector(4 downto 0);
+		s_value_1 : out STD_LOGIC_VECTOR (31 downto 0); 
+		s_value_2 : out STD_LOGIC_VECTOR (31 downto 0);
+		s_value_3 : out STD_LOGIC_VECTOR (31 downto 0);
+		destination_address : out STD_LOGIC_VECTOR(4 DOWNTO 0);
+		is_float : out STD_LOGIC;
+		is_ml : out STD_LOGIC;
+		ml_opcode : out STD_LOGIC;
+		write_vec_reg : in std_logic;
+		destination_value_vec : in std_logic_vector( 127 downto 0 );
+		destnation_element_vec : in std_logic_vector( 3 downto 0 );
+		is_vl : out std_logic;
+		vec_reg_en : out std_logic;
+		vec1_data : out std_logic_vector ( 127 downto 0 );
+        vec2_data : out std_logic_vector ( 127 downto 0 ));
 end component;
 component execution_stage is
     Port(clk : in STD_LOGIC;
         rst : in STD_LOGIC;
         flush : in STD_LOGIC;
-        value_1 : in STD_LOGIC_VECTOR (31 downto 0);
-        value_2 : in STD_LOGIC_VECTOR (31 downto 0); -- used in data memory
-        value_3 : in STD_LOGIC_VECTOR (31 downto 0); -- used only for mlu -> mac instructions
-        conditional_opcode : in STD_LOGIC_VECTOR (2 downto 0);
-        alu_opcode : in STD_LOGIC_VECTOR (3 downto 0);
-        ml_opcode : in STD_LOGIC;
+        value_1 : in STD_LOGIC_VECTOR( 31 downto 0 );
+        value_2 : in STD_LOGIC_VECTOR( 31 downto 0 );
+        value_3 : in STD_LOGIC_VECTOR( 31 downto 0 );
+        vec1_data : in std_logic_vector ( 127 downto 0 );
+        vec2_data : in std_logic_vector ( 127 downto 0 );
+        conditional_opcode : in STD_LOGIC_VECTOR( 2 downto 0 );
+        alu_opcode : in STD_LOGIC_VECTOR( 3 downto 0 );
         a_select : in STD_LOGIC;
         b_select : in STD_LOGIC;
-        immediate : in STD_LOGIC_VECTOR (31 downto 0);
-        is_float : in STD_LOGIC;
-        is_ml : in STD_LOGIC;
-        float_forward : out std_logic;
-        ml_forward : out std_logic;
-        fpu_output : out STD_LOGIC_VECTOR (31 downto 0);
-        alu_output : out STD_LOGIC_VECTOR (31 downto 0);
-        mlu_output : out STD_LOGIC_VECTOR (31 downto 0);
+        immediate : in STD_LOGIC_VECTOR( 31 downto 0 );
+        is_float : in std_logic;
+        is_ml : in std_logic;
+        is_vec : in std_logic;
+        write_vec_reg_in : in std_logic;
+        write_vec_reg_out : out std_logic;
+        alu_output_1 : out STD_LOGIC_VECTOR( 31 downto 0 );
+        alu_output_2 : out STD_LOGIC_VECTOR( 31 downto 0 );
+        alu_output_3 : out STD_LOGIC_VECTOR( 31 downto 0 );
+        alu_output_4 : out STD_LOGIC_VECTOR( 31 downto 0 );
         branch_condition : out STD_LOGIC;
-        pc : in STD_LOGIC_VECTOR (31 downto 0);
-        d_in : in STD_LOGIC_VECTOR(4 downto 0);
-        pc_out : out STD_LOGIC_VECTOR (31 downto 0);
-        d_out : out STD_LOGIC_VECTOR(4 downto 0);
-        a_select_forward : out STD_LOGIC;
-        b_select_forward : out STD_LOGIC;
-        opclass_in : in STD_LOGIC_VECTOR (4 downto 0); -- for the data memory
-        opclass_out : out STD_LOGIC_VECTOR (4 downto 0);
-        value_1_forward : out STD_LOGIC_VECTOR (31 downto 0);
-        value_2_forward : out STD_LOGIC_VECTOR (15 downto 0);
+        pc : in STD_LOGIC_VECTOR( 31 downto 0 );
+        pc_out :  out STD_LOGIC_VECTOR( 31 downto 0 );
+        d_in :  in STD_LOGIC_VECTOR( 4 downto 0 );
+        d_out :  out STD_LOGIC_VECTOR( 4 downto 0 );
+        a_select_forward : out std_logic;
+        b_select_forward : out std_logic;
+        opclass_in : in STD_LOGIC_VECTOR( 4 downto 0 );
+        opclass_out : out STD_LOGIC_VECTOR( 4 downto 0 );
+        value_1_forward : out STD_LOGIC_VECTOR( 31 downto 0 );
+        value_2_forward : out STD_LOGIC_VECTOR( 15 downto 0 );
         a2_select : in STD_LOGIC;
         b2_select : in STD_LOGIC;
-        c_select : in STD_LOGIC;
-        memory_value : in STD_LOGIC_VECTOR (31 downto 0));
+        c_select : in std_logic;
+        memory_value : in STD_LOGIC_VECTOR( 31 downto 0 ));
 end component;
 COMPONENT data_memory
   PORT (clka : IN STD_LOGIC;
@@ -184,10 +194,11 @@ signal s_value_3_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal value_2_ex_display : STD_LOGIC_VECTOR (15 downto 0);
 signal is_float_ex : std_logic;
 signal is_ml_ex : std_logic;
+signal value_1_ex : STD_LOGIC_VECTOR (3 downto 0);
 
 --signals connected to data memory
 signal write_enable_dm : std_logic;
-signal value_1_ex_dm : STD_LOGIC_VECTOR (31 downto 0);
+signal mem_in_dm : STD_LOGIC_VECTOR (31 downto 0);
 signal mem_out_dm : STD_LOGIC_VECTOR (31 downto 0); -- output
 
 --signals connected to read and write back stage
@@ -240,6 +251,7 @@ if_stage: instruction_fetch_stage
         branch_pc => alu_output_ex(11 downto 0),
         pc_out => pc_if_id,
        	instruction => instruction_if_id);
+        
 id_stage: instruction_decode
     Port map (pc_in => pc_if_id,
        	instruction => instruction_if_id,
@@ -266,6 +278,7 @@ id_stage: instruction_decode
         is_float => is_float_id_ex,
         is_ml => is_ml_id_ex,
         ml_opcode => ml_opcode_id_ex);
+
 exe_stage : execution_stage
     Port map (clk => clk,
         rst => rst,
@@ -285,7 +298,7 @@ exe_stage : execution_stage
         alu_opcode => alu_opcode_id_ex,
         opclass_in => opclass_id_ex, 
         opclass_out => opclass_out_ex,
-        value_1_forward => value_1_ex_dm,
+        value_1_forward => value_1_ex,
         value_2_forward => value_2_ex_display,
         a_select_forward => a_select_ex_control ,
         b_select_forward => b_select_ex_control,
@@ -306,7 +319,7 @@ stage_dm : data_memory
    	PORT MAP (clka => clk ,
     	wea(0) => write_enable_dm,
     	addra => alu_output_ex(9 DOWNTO 0),
-    	dina => value_1_ex_dm,
+    	dina => mem_in_dm,
     	douta => mem_out_dm);
     	
 wb_stage : read_write_back_stage
@@ -405,19 +418,35 @@ mem_out_wb(31 downto 0) <= (others => '0');
 --        display_signal <= (others => '0');
 --        mem_out_wb(31 downto 0) <= (others => '0');
 --    elsif rising_edge(clk) then
---        if  (value_1_ex_dm >=  x"20000000" and value_1_ex_dm <= x"20000010") then
+--        if  (value_1_ex >=  x"20000000" and value_1_ex <= x"20000010") then
 --            mem_out_wb(31 downto 16) <= (others => '0');
 --            mem_out_wb(15 downto 0) <= switches_signal(15 downto 0);
 --        else
 --            mem_out_wb <= mem_out_dm;
 --        end if;
---        if value_1_ex_dm(31 downto 0) = x"30000000" then
+--        if value_1_ex(31 downto 0) = x"30000000" then
 --            if opclass_out_ex = "00010" then
 --                display_signal <= value_2_ex_display;
 --            end if;
 --        end if;
 --    end if;
 --end process;
+
+writing_data_mem_process : process () begin
+    if data_vec_en_ex = '1' then  -- value taken from the vector register
+        if source_2_ex(3) = '1' then -- storing value from 4th element
+            mem_in_dm <= vec3_ex( 127 downto 96 );
+        elsif source_2_ex(2) = '1' then -- storing value from 3rd element
+            mem_in_dm <= vec3_data( 95 downto 64 );
+        elsif source_2_ex(1) = '1' then -- storing value from 2nd element
+            mem_in_dm <= vec3_data( 63 downto 32 );
+        else -- source_2_ex(0) = '1' then -- storing value from 1st element
+            mem_in_dm <= vec3_data( 31 downto 0 );
+        end if;
+    else -- value taken from the register file for intger/float stores
+        mem_in_dm <= value_1_ex;
+    end if;
+end process;
 
 data_hazards_1 : process ( s_value_1_id, consecutive_data_hazard_1_control, alu_output_ex,
                            non_consecutive_data_hazard_1_control, destination_value_wb_id ) begin
