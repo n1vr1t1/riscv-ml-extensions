@@ -90,7 +90,6 @@ component immediate_generator is
           clk : in std_logic;
           flush : in std_logic;
           opcode : in STD_LOGIC_VECTOR( 6 downto 0 );
-          funct3 : in STD_LOGIC_VECTOR( 2 downto 0 );
           instruction : in STD_LOGIC_VECTOR( 31 downto 7 );
           immediate : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end component;
@@ -122,7 +121,7 @@ vec_file_decode : vec_reg
 		vec_element => vec_dest_element,
 		v1 => instruction ( 19 downto 15 ),
 		v2 => instruction( 24 downto 20 ),
-		v3 => instrucrtion( 11 downto 7 ),
+		v3 => instruction( 11 downto 7 ),
 		v1_data => vec1_data,
 		v2_data => vec2_data,
 		v3_data => vec3_data );

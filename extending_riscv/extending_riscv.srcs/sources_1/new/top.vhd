@@ -194,7 +194,10 @@ signal s_value_3_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal value_2_ex_display : STD_LOGIC_VECTOR (15 downto 0);
 signal is_float_ex : std_logic;
 signal is_ml_ex : std_logic;
-signal value_1_ex : STD_LOGIC_VECTOR (3 downto 0);
+signal value_1_ex : STD_LOGIC_VECTOR (31 downto 0);
+signal data_vec_en_ex : std_logic;
+signal source_2_ex : std_logic_vector (3 downto 0);
+signal vec3_ex : STD_LOGIC_VECTOR (127 downto 0);
 
 --signals connected to data memory
 signal write_enable_dm : std_logic;
@@ -245,8 +248,8 @@ signal b_select_ex_control: std_logic;
 
 begin
 if_stage: instruction_fetch_stage
-    Port map (clk=>clk,
-        rst=>rst,
+    Port map (clk => clk,
+        rst => rst,
         branch_condition => flush_control,
         branch_pc => alu_output_ex(11 downto 0),
         pc_out => pc_if_id,
@@ -262,7 +265,7 @@ id_stage: instruction_decode
         rst => rst,
 	    pc_out => pc_id_ex,
        	immediate => immediate_id_ex,
-	    op_class => opclass_id_ex,
+	    opclass => opclass_id_ex,
        	alu_opcode => alu_opcode_id_ex,
 	    a_select => a_select_id_ex,
        	b_select => b_select_id_ex,
@@ -432,16 +435,16 @@ mem_out_wb(31 downto 0) <= (others => '0');
 --    end if;
 --end process;
 
-writing_data_mem_process : process () begin
+writing_data_mem_process : process (data_vec_en_ex, vec3_ex, value_1_ex) begin
     if data_vec_en_ex = '1' then  -- value taken from the vector register
         if source_2_ex(3) = '1' then -- storing value from 4th element
             mem_in_dm <= vec3_ex( 127 downto 96 );
         elsif source_2_ex(2) = '1' then -- storing value from 3rd element
-            mem_in_dm <= vec3_data( 95 downto 64 );
+            mem_in_dm <= vec3_ex( 95 downto 64 );
         elsif source_2_ex(1) = '1' then -- storing value from 2nd element
-            mem_in_dm <= vec3_data( 63 downto 32 );
+            mem_in_dm <= vec3_ex( 63 downto 32 );
         else -- source_2_ex(0) = '1' then -- storing value from 1st element
-            mem_in_dm <= vec3_data( 31 downto 0 );
+            mem_in_dm <= vec3_ex( 31 downto 0 );
         end if;
     else -- value taken from the register file for intger/float stores
         mem_in_dm <= value_1_ex;

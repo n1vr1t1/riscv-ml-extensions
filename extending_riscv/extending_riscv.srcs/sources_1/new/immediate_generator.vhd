@@ -13,9 +13,10 @@ entity immediate_generator is
 end immediate_generator;
 
 architecture Behavioral of immediate_generator is
-    variable funct3 : STD_LOGIC_VECTOR( 2 downto 0 );
 begin
-process ( rst, clk ) begin
+process ( rst, clk )
+variable funct3 : STD_LOGIC_VECTOR( 2 downto 0 );
+begin
 	if rst = '0' then 
 		immediate <= ( others => '0' );
         funct3 := (others => '0');

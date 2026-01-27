@@ -212,7 +212,7 @@ process (rst, clk) begin
 						when "0000000" => operation_code <= "0000"; -- fadd
 						when "0000010" => 
 							mlu_en <= '1';
-							case funct3
+							case funct3 is
 								when "010" =>
 									operation_code <= "0010"; -- leaky relu
 								when "111" => 
@@ -451,7 +451,7 @@ process (rst, clk) begin
 							end case;
 						when "001001" => -- vand
 							fpu_en <= '0';
-							operational_code <= "0111";
+							operation_code <= "0111";
 							case funct3 is
 								when "000" => -- vand.vv
 									a_select <= "10";
@@ -463,7 +463,7 @@ process (rst, clk) begin
 							end case;
 						when "001010" => -- vor
 							fpu_en <= '0';
-							operational_code <= "0110";
+							operation_code <= "0110";
 							case funct3 is
 								when "000" =>  -- vor.vv
 									a_select <= "10";
@@ -475,7 +475,7 @@ process (rst, clk) begin
 							end case;
 						when "001011" => -- vxor
 							fpu_en <= '0';
-							operational_code <= "1000";
+							operation_code <= "1000";
 							case funct3 is
 								when "000" => -- vxor.vv
 									a_select <= "10";
@@ -487,7 +487,7 @@ process (rst, clk) begin
 							end case;
 						when "100001" => -- vdiv
 							fpu_en <= '0';
-							operational_code <= "1001";
+							operation_code <= "1001";
 							case funct3 is
 								when "010" => -- vdiv.vv
 									a_select <= "10";
@@ -500,19 +500,19 @@ process (rst, clk) begin
 							case funct3 is
 								when "000" => -- vsll.vv
 									a_select <= "10";
-									operational_code <= "1101";
+									operation_code <= "1101";
 								when "010" => -- vmul.vv
 									a_select <= "10";
-									operational_code <= "0010";
+									operation_code <= "0010";
 								when "011" => -- vsll.vi
 									a_select <= "11";
-									operational_code <= "1101";
+									operation_code <= "1101";
 								when "100" => -- vsll.vx
 									a_select <= "00";
-									operational_code <= "1101";
+									operation_code <= "1101";
 								when "110" => -- vmul.vx
 									a_select <= "00";
-									operational_code <= "0010";
+									operation_code <= "0010";
 								when others => 
 									a_select <= "00";
 									operation_code <= "1111";

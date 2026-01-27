@@ -43,13 +43,13 @@ process (value_1 , value_2 , cond_opcode) begin
 			else
 				branch_condition <=  '0';
 			end if;
-    	when "100" then  -- branch if less than or equal
+    	when "100" =>  -- branch if less than or equal
 			if value_1 <= value_2 then
 				branch_condition <=  '1';
 			else 
 			branch_condition <=  '0';
 			end if;
-    	when "101" then -- branch if greater than or equal
+    	when "101" => -- branch if greater than or equal
 			if value_1 >= value_2 then
 				branch_condition <=  '1';
 			else
