@@ -25,6 +25,7 @@ entity decoder is
         fpu_en : out std_logic; -- indicates that the operation using the fpu (floating point unit)
         vpu_en : out std_logic; -- indicates that the operation using the vpu (vector processing unit)
         vec_reg_en : out std_logic; -- indicates that the value needs to be saved in the vector register
+        vec_data_mem_en : out std_logic;
         mlu_en : out std_logic); -- indicates that the operation is using the mlu (machine learning unit)
 end decoder;
 
@@ -43,6 +44,7 @@ process (rst, clk) begin
 		vpu_en <= '0';
         mlu_en <= '0';
         vec_reg_en <= '0';
+        vec_data_mem_en <= '0';
 		conditional_opcode  <= (others => '1');
     elsif rising_edge(clk) then 
 		if flush = '1' then
@@ -55,10 +57,12 @@ process (rst, clk) begin
             vpu_en <= '0';
             mlu_en <= '0';
             vec_reg_en <= '0';
+            vec_data_mem_en <= '0';
 			conditional_opcode  <= (others => '1');
 	    else -- normal operations (without flush)
 			conditional_opcode <= (others => '1'); -- default for when we dont have a branch instruction
 			c_select <= '0'; -- default for non-vector instructions -> taking the value from the register file 
+			vec_data_mem_en <= '0';
 			case opcode is
 				when "0000011" => -- load from memory to register file
 					opclass <= "00001";
@@ -96,6 +100,7 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 					vec_reg_en <= '0'; -- vector register is not written
+					vec_data_mem_en <= '1'; -- indicates that the value needs to be taken from the vector register
 				when "0010011" => -- immediate
 					opclass <= "00100";
 					a_select <= "00";
