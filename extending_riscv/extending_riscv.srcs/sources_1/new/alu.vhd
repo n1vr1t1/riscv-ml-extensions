@@ -88,12 +88,12 @@ architecture Behavioral of alu is
         return res;
     end function;
 
-    variable multiply_result: STD_LOGIC_VECTOR(63 downto 0) := ( others => '0' ); --check if it can be shortened to 32 bits
+begin 
+process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) 
+variable multiply_result: STD_LOGIC_VECTOR(63 downto 0) := ( others => '0' ); --check if it can be shortened to 32 bits
     variable op1_fp, op2_fp, op3_fp : signed(55 downto 0); -- for floating point operations
     variable mul_fp : signed(111 downto 0); -- to store the result of floating point multiplication
-
-begin 
-process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) begin
+begin
     if en = '0' then -- disables the alu (used by the extra alu for vector operations)
         alu_output <= (others => '0');
     else
@@ -105,56 +105,56 @@ process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) begin
             multiply_result := (others => '0');
             if is_ml = '1' then -- ml operations with floating point operands
                 if opcode(0) = '1' then -- macc
-                    output <= fixed_to_flt(signed( shift_right( mul_fp, 23 )( 55 downto 0 )) + op3_fp);
+                    alu_output <= fixed_to_flt(signed( shift_right( mul_fp, 23 )( 55 downto 0 )) + op3_fp);
                 elsif opcode(1) = '1' then -- leaky relu
                     if op1_fp >= 0 then
-                        output <= operand_1;
+                        alu_output <= operand_1;
                     else
-                        output <= fixed_to_flt( signed( shift_right( mul_fp, 23 )( 55 downto 0 )));
+                        alu_output <= fixed_to_flt( signed( shift_right( mul_fp, 23 )( 55 downto 0 )));
                     end if;
                 else 
-                    output <= (others => '0'); -- assuming that the operation is invalid
+                    alu_output <= (others => '0'); -- assuming that the operation is invalid
                 end if;
             else -- normal floating point operation
                 case opcode is
                     when "0000" => -- add
-                        output <= fixed_to_flt(op1_fp + op2_fp);
+                        alu_output <= fixed_to_flt(op1_fp + op2_fp);
                     when "0001" => -- sub
-                        output <= fixed_to_flt(op1_fp - op2_fp);
+                        alu_output <= fixed_to_flt(op1_fp - op2_fp);
                     when "0010" => -- mul
-                        prod := signed( op1_fp ) * signed( op2_fp );
-                        output <= fixed_to_flt(signed( shift_right( prod, 23 )(55 downto 0) ));
+                        mul_fp := signed( op1_fp ) * signed( op2_fp );
+                        alu_output <= fixed_to_flt(signed( shift_right( mul_fp, 23 )(55 downto 0) ));
                     when "0011" => -- set if less than /min
                         if op1_fp < op2_fp then
-                            output <= operand_1;
+                            alu_output <= operand_1;
                         else
-                            output <= operand_2;
+                            alu_output <= operand_2;
                         end if;
                     when "0100" => -- set if greater then/max
                         if op1_fp > op2_fp then
-                            output <= operand_1;
+                            alu_output <= operand_1;
                         else
-                            output <= operand_2;
+                            alu_output <= operand_2;
                         end if;
                     when "0101" => -- set if less than or equal
                         if op1_fp <= op2_fp then
-                            output <= operand_1;
+                            alu_output <= operand_1;
                         else
-                            output <= operand_2;
+                            alu_output <= operand_2;
                         end if;
                     when "0110" => -- set if equal
                         if op1_fp = op2_fp then
-                            output(31 downto 1) <= (others => '0');
-                            output(0) <= '1';
+                            alu_output(31 downto 1) <= (others => '0');
+                            alu_output(0) <= '1';
                         else
-                            output <= (others => '0');
+                            alu_output <= (others => '0');
                         end if;
                     when "0111" => -- int to float
-                        output <= fixed_to_flt(resize(signed(operand_1), 56));
+                        alu_output <= fixed_to_flt(resize(signed(operand_1), 56));
                     when "1000" => -- float to int
-                        output <= std_logic_vector(to_signed(to_integer(op1_fp), 32));
+                        alu_output <= std_logic_vector(to_signed(to_integer(op1_fp), 32));
                     when others =>
-                        output <= (others => '0');
+                        alu_output <= (others => '0');
                 end case;
             end if;
         else -- integer operations
@@ -165,18 +165,18 @@ process (operand_1, operand_2, operand_3, opcode, is_float, is_ml, en) begin
             mul_fp := (others => '0');
             if is_ml = '1' then -- ml operations with integers
                 if opcode(0) = '1' then 
-                    output <= multiply_result(31 downto 0); -- rd = r1 * r2
+                    alu_output <= multiply_result(31 downto 0); -- rd = r1 * r2
                 elsif opcode(1) = '1' then -- leaky relu
                     if operand_1(31) = '0' then -- rd = r1
-                        output <= operand_1;
+                        alu_output <= operand_1;
                     else
-                        output <= (others => '0'); -- assuming that the operation is invalid
+                        alu_output <= (others => '0'); -- assuming that the operation is invalid
                     end if;
                 else -- macc
-                    output <= std_logic_vector(unsigned(multiply_result(31 downto 0)) + unsigned(operand_3));
+                    alu_output <= std_logic_vector(unsigned(multiply_result(31 downto 0)) + unsigned(operand_3));
                 end if;
             else -- normal operations
-                case alu_opcode is
+                case opcode is
                     when "0000" => -- add
                         alu_output <= std_logic_vector(unsigned(operand_1) + unsigned(operand_2)); 
                     when "0001" => -- sub
