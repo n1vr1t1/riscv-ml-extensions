@@ -10,7 +10,7 @@ entity alu is
           is_float : in STD_LOGIC; -- indicates if the operation is a floating point
           is_ml : in STD_LOGIC; -- indicates if the operation is a machine learning operation
           en : in STD_LOGIC; -- enable signal to disable the alu when not in use
-          alu_output : out STD_LOGIC_VECTOR( 31 downto 0) );
+          alu_output : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end alu;
 
 architecture Behavioral of alu is
@@ -158,22 +158,22 @@ begin
                 end case;
             end if;
         else -- integer operations
-            multiply_result := std_logic_vector(unsigned(operand_1) * unsigned(operand_2));
+            multiply_result := std_logic_vector(signed(operand_1) * signed(operand_2)); -- r1 * r2
             op1_fp := (others => '0');
             op2_fp  := (others => '0');
             op3_fp  := (others => '0');
             mul_fp := (others => '0');
             if is_ml = '1' then -- ml operations with integers
-                if opcode(0) = '1' then 
-                    alu_output <= multiply_result(31 downto 0); -- rd = r1 * r2
+                if opcode(0) = '1' then -- macc
+                    alu_output <= std_logic_vector(signed(multiply_result(31 downto 0)) + signed(operand_3)); -- r1 * r2 + r3
                 elsif opcode(1) = '1' then -- leaky relu
-                    if operand_1(31) = '0' then -- rd = r1
-                        alu_output <= operand_1;
-                    else
-                        alu_output <= (others => '0'); -- assuming that the operation is invalid
+                    if operand_1(31) = '0' then -- check r1 > 0 using sign bit
+                        alu_output <= operand_1; -- rd = r1
+                    else 
+                        alu_output <= multiply_result(31 downto 0); -- rd = r1 * r2
                     end if;
-                else -- macc
-                    alu_output <= std_logic_vector(unsigned(multiply_result(31 downto 0)) + unsigned(operand_3));
+                else -- invalid op
+                    alu_output <= (others => '0');
                 end if;
             else -- normal operations
                 case opcode is
@@ -182,7 +182,7 @@ begin
                     when "0001" => -- sub
                         alu_output <= std_logic_vector(unsigned(operand_1) - unsigned(operand_2)); 
                     when "0010" => -- mul
-                        alu_output <= multiply_result; -- check if it works okay 
+                        alu_output <= multiply_result(31 downto 0); 
                     when "0011" => -- set less than
                         if signed(operand_1) < signed(operand_2) then
                             alu_output <= operand_1;
@@ -202,14 +202,18 @@ begin
                             alu_output <=(others => '0');
                         end if;
                     when "0110" => -- or
-                        alu_output <= std_logic_vector(to_signed(to_integer(signed(operand_1) / signed(operand_2)),32));
+                        alu_output <= std_logic_vector(unsigned(operand_1) or unsigned(operand_2));
                     when "0111" => -- and
                         alu_output <= std_logic_vector(unsigned(operand_1) and unsigned(operand_2));
                     when "1000" => -- xor
                         alu_output <= std_logic_vector(unsigned(operand_1) xor unsigned(operand_2));
                     when "1001" => -- div
-                        alu_output <= std_logic_vector(unsigned(operand_1) or unsigned(operand_2));
-                    when "1010" => -- set if greater than or equal
+                        if operand_2 = "00000000000000000000000000000000" then 
+                            alu_output <= (others => '0');
+                        else 
+                            alu_output <= std_logic_vector(to_signed(to_integer(signed(operand_1) / signed(operand_2)),32));
+                        end if;
+                            when "1010" => -- set if greater than or equal
                         if signed(operand_1) >= signed(operand_2) then
                             alu_output <= operand_1;
                         else
