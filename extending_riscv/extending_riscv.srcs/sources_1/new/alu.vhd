@@ -150,9 +150,14 @@ begin
                             alu_output <= (others => '0');
                         end if;
                     when "0111" => -- int to float
-                        alu_output <= fixed_to_flt(resize(signed(operand_1), 56));
+                        alu_output <= fixed_to_flt(shift_left(resize(signed(operand_1), 56), 23));
                     when "1000" => -- float to int
-                        alu_output <= std_logic_vector(to_signed(to_integer(op1_fp), 32));
+                        -- truncate toward zero implemented differently based on sign
+                        if op1_fp < 0 then
+                            alu_output <= std_logic_vector(resize(-shift_right(-op1_fp, 23), 32));
+                        else
+                            alu_output <= std_logic_vector(resize(shift_right(op1_fp, 23), 32));
+                        end if;
                     when others =>
                         alu_output <= (others => '0');
                 end case;
