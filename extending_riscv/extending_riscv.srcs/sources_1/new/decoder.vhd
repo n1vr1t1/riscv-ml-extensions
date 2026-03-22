@@ -2,7 +2,7 @@
 -- Notes: 
 -- 1. For flw and fsw, the float bit is not activated because we are writing to the normal register file 
 --    and the address is an int, therefore only the alu is used to calculate the address which is an int
--- 2. ml opcode is  1000001
+-- 2. ml opcode is 1000001
 -- 3. vector operations 1010111, vector load 0000111, vector store 0100111
 ---------------------------------------------------
 library IEEE;
@@ -25,7 +25,7 @@ entity decoder is
         fpu_en : out std_logic; -- indicates that the operation using the fpu (floating point unit)
         vpu_en : out std_logic; -- indicates that the operation using the vpu (vector processing unit)
         vec_reg_en : out std_logic; -- indicates that the value needs to be saved in the vector register
-        vec_data_mem_en : out std_logic;
+        vec_data_mem_en : out std_logic; -- indicates that the value is written to the data memory
         mlu_en : out std_logic); -- indicates that the operation is using the mlu (machine learning unit)
 end decoder;
 
@@ -60,6 +60,7 @@ process (rst, clk) begin
             vec_data_mem_en <= '0';
 			conditional_opcode  <= (others => '1');
 	    else -- normal operations (without flush)
+			opclass <= "00100";
 			conditional_opcode <= (others => '1'); -- default for when we dont have a branch instruction
 			c_select <= '0'; -- default for non-vector instructions -> taking the value from the register file 
 			vec_data_mem_en <= '0';
@@ -100,9 +101,8 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 					vec_reg_en <= '0'; -- vector register is not written
-					vec_data_mem_en <= '1'; -- indicates that the value needs to be taken from the vector register
+					vec_data_mem_en <= '1'; -- indicates that the value needs to be written to data memory from vector register
 				when "0010011" => -- immediate
-					opclass <= "00100";
 					a_select <= "00";
 					b_select <= "01";
 					vpu_en <= '0';
@@ -121,7 +121,6 @@ process (rst, clk) begin
 						when others => operation_code <= "0000"; -- add by default
 					end case;
 				when "0110011" => -- operation
-					opclass <= "00100";
 					a_select <= "00";
 					b_select <= "00";
 					fpu_en <= '0';
@@ -197,7 +196,6 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 				when "0110111" => -- lui
-					opclass <= "00100";
 					operation_code <= "1100";
 					a_select <= "00";
 					b_select <= "01";
@@ -205,8 +203,15 @@ process (rst, clk) begin
 					vpu_en <= '0';
 					vec_reg_en <= '0';
 					mlu_en <= '0';
+				when "1000011" => -- fmadd
+					a_select <= "00";
+					b_select <= "00";
+					fpu_en <= '1';
+					vpu_en <= '0';
+					vec_reg_en <= '0';
+					mlu_en <= '1';
+					operation_code <= "0001";
 				when "1010011" => -- float operations
-					opclass <= "00100";
 					a_select <= "00";
 					b_select <= "00";
 					fpu_en <= '1';
@@ -215,16 +220,9 @@ process (rst, clk) begin
 					mlu_en <= '0';
 					case funct7 is
 						when "0000000" => operation_code <= "0000"; -- fadd
-						when "0000010" => 
+						when "0000010" => -- leaky relu
 							mlu_en <= '1';
-							case funct3 is
-								when "010" =>
-									operation_code <= "0010"; -- leaky relu
-								when "111" => 
-									operation_code <= "0001"; -- fmadd
-								when others =>
-									operation_code <= "0000";
-							end case;
+							operation_code <= "0010";
 						when "0000100" => operation_code <= "0001"; -- fsub
 						when "0001000" => operation_code <= "0010"; -- fmul
 						when "0010100" =>
@@ -242,14 +240,15 @@ process (rst, clk) begin
 								operation_code <= "0100"; -- fgt
 							end if;
 						when "1110000" => operation_code <= "0111"; -- fmv.x.w (int to float)
+						when "1101000" => operation_code <= "0111"; -- fcvt.s.w
 						when "1111000" => operation_code <= "1000"; -- fmv.w.x (float to int)
+						when "1100000" => operation_code <= "1000"; -- fcvt.w.s
 						when others => operation_code <= "1111";
 					end case;
 				when "1010111" => -- vector operations
 					vpu_en <= '1';
 					mlu_en <= '0';
 					vec_reg_en <= '1';
-					opclass <= "00100";
 					b_select <= "10"; -- for vector operations, operand 2 is always from the vector register
 					c_select <= '1'; -- takes the value from the vector register
 					case funct6 is
@@ -302,11 +301,11 @@ process (rst, clk) begin
 									a_select <= "10";
 								when "101" => -- vfmul.vf
 									a_select <= "00";
-								when others => 
-									a_select <= "00";
+								when others => a_select <= "00";
 							end case;
 						when "000100" =>  -- vfmin (same as vmflt)
 							fpu_en <= '1';
+							operation_code <= "0011"; -- slt;
 							case funct3 is
 								when "001" => -- vfmin.vv
 									a_select <= "10";
@@ -334,7 +333,7 @@ process (rst, clk) begin
 									a_select <= "00";
 								when others => a_select <= "00";
 							end case;
-						when "000110" =>  -- vfmax (same as vmfgt)
+						when "000110" =>  -- vfmax (same as c)
 							fpu_en <= '1';
 							operation_code <= "0100";
 							case funct3 is
@@ -570,16 +569,7 @@ process (rst, clk) begin
 					mlu_en <= '0';
 					operation_code <= "1111";
 			end case;
-		end if;
-	else 
-		opclass <= "00000";
-		a_select <= "00";
-		b_select <= "00";
-		vpu_en <= '0';
-		fpu_en <= '0';
-        mlu_en <= '0';
-		operation_code <= "1111";
-		conditional_opcode <= (others => '1');
+		end if; -- flush
 	end if;
 end process;
 end Behavioral;
