@@ -25,12 +25,12 @@ begin
         if flush = '0' then
 	        case opcode is
 	            when "0010011" => -- immediate
-	                if funct3 = "000" then
-                        immediate( 11 downto 0 ) <= instruction( 31 downto 20 ); 
-                        immediate( 31 downto 12 ) <= ( others => instruction( 31 ));
-                    else
+	                if funct3 = "001" or funct3 = "101" then -- srli, slli
                         immediate( 4 downto 0 ) <= instruction( 24 downto 20 ); 
                         immediate( 31 downto 5 ) <= ( others => '0' );
+                    else
+                        immediate( 11 downto 0 ) <= instruction( 31 downto 20 ); 
+                        immediate( 31 downto 12 ) <= ( others => instruction( 31 ));
                     end if;
 	            when "0100011" => -- store (normal) 
 	               immediate( 10 downto 5 ) <= instruction( 30 downto 25 );
