@@ -14,11 +14,12 @@ entity execution_stage is
     Port( clk :  in std_logic;
         rst :  in std_logic;
         flush :  in std_logic;
-        value_1 : in STD_LOGIC_VECTOR( 31 downto 0 );
-        value_2 : in STD_LOGIC_VECTOR( 31 downto 0 ); -- used in data memory and for vector load-store operations
+        source_1 : in STD_LOGIC_VECTOR( 31 downto 0 );
+        source_2 : in STD_LOGIC_VECTOR( 31 downto 0 ); -- used in data memory and for vector load-store operations
         value_3 : in STD_LOGIC_VECTOR( 31 downto 0 ); -- used only for mlu
         vec1_data : in std_logic_vector( 127 downto 0 );
         vec2_data : in std_logic_vector( 127 downto 0 );
+        vec3_data : in std_logic_vector( 127 downto 0 );
         conditional_opcode : in STD_LOGIC_VECTOR( 2 downto 0 );
         alu_opcode : in STD_LOGIC_VECTOR( 3 downto 0 );
         a_select : in STD_LOGIC_VECTOR(1 downto 0);
@@ -37,7 +38,7 @@ entity execution_stage is
         vec3_out : out std_logic_vector( 127 downto 0 );
         vec_we : in std_logic;
         vec_we_forward : out std_logic;
-        source_2 : in std_logic_vector(3 downto 0);
+        address_2 : in std_logic_vector(3 downto 0);
         s_out : out std_logic_vector(3 downto 0);
         p_in : in STD_LOGIC_VECTOR( 31 downto 0 );
         p_out :  out STD_LOGIC_VECTOR( 31 downto 0 );
@@ -77,15 +78,15 @@ signal branch_condition_signal, is_float_signal, is_ml_signal, vec_signal : std_
 signal alu1_op_a, alu1_op_b, alu1_op_c : std_logic_vector( 31 downto 0 );
 signal conditional_opcode_signal : STD_LOGIC_VECTOR( 2 downto 0 );
 signal alu_opcode_signal : STD_LOGIC_VECTOR( 3 downto 0 );
-variable post_load_a, post_load_b : std_logic_vector( 31 downto 0 );
+signal comp_a, comp_b : std_logic_vector( 31 downto 0 );
 signal alu2_op_a, alu2_op_b, alu2_op_c : std_logic_vector( 31 downto 0 );
 signal alu3_op_a, alu3_op_b, alu3_op_c : std_logic_vector( 31 downto 0 );
 signal alu4_op_a, alu4_op_b, alu4_op_c : std_logic_vector( 31 downto 0 );
 
 begin
     comp_exe : comparator
-        Port map(value_1 => post_load_a,
-                value_2 => post_load_b,
+        Port map(value_1 => comp_a,
+                value_2 => comp_b,
                 cond_opcode => conditional_opcode_signal,
                 branch_condition => branch_condition );
     alu_1 : alu
@@ -127,7 +128,9 @@ begin
                            
 -- branch_condition <= branch_condition_signal;
 
-process ( rst, clk ) begin
+process ( rst, clk ) 
+variable post_load_a, post_load_b : std_logic_vector( 31 downto 0 );
+begin
 	if rst = '0' then
 	    alu_opcode_signal <= ( others => '0' );
 	    is_float_signal <= '0';
@@ -158,6 +161,8 @@ process ( rst, clk ) begin
         vec_we_forward <= '0';
         post_load_a := ( others => '0' );
         post_load_b := ( others => '0' );
+        comp_a <= ( others => '0' );
+        comp_b <= ( others => '0' );
     elsif rising_edge( clk ) then
         if flush ='0' then
             a_out <= a_select( 0 );
@@ -169,7 +174,7 @@ process ( rst, clk ) begin
             vec_we_forward <= vec_we;
             conditional_opcode_signal <= conditional_opcode;
             p_out <= p_in;
-            rs1_out <= value_1;
+            rs1_out <= source_1;
             rs2_out <= value_2( 15 downto 0 );
             d_out <= d_in;
             o_out <= o_in;
@@ -183,13 +188,15 @@ process ( rst, clk ) begin
             if load_a = '1' then  --  load hazard for 32 bit data
                 post_load_a := memory_value;
             else
-                post_load_a := value_1;
+                post_load_a := source_1;
             end if;
             if load_b = '1' then --load hazard for 32 bit data
                 post_load_b := memory_value;
             else 
                 post_load_b := value_2;
             end if;
+            comp_a <= post_load_a;
+            comp_b <= post_load_b;
             case a_select is
                 -- when "00" => -- value from register
                     -- alu1_op_a <= post_load_a;
@@ -264,6 +271,8 @@ process ( rst, clk ) begin
             vec_we_forward <= '0';
             post_load_a := ( others => '0' );
             post_load_b := ( others => '0' );
+            comp_a <= ( others => '0' );
+            comp_b <= ( others => '0' );
         end if;
 	end if;
 end process;
