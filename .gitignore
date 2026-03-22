@@ -8,4 +8,4 @@
 *.xpr
 *.jou
 *.log
-riscv-ml-extensions\extending_riscv\extending_riscv.srcs\sources_1\ip\*
+extending_riscv.srcs\sources_1\ip\*
