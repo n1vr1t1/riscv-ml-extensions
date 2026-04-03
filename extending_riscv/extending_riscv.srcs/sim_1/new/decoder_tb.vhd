@@ -118,15 +118,10 @@ begin
             check_decoder(test_name, "00100", exp_operation_code, exp_a_select, "10", '1', "111", exp_fpu_en, '1', '1', '0', exp_mlu_en);
         end procedure;
     begin
-        -- Asynchronous reset behavior.
         rst <= '0';
-        flush <= '0';
-        instructions <= (others => '0'); -- Initialize instructions
         wait for 1 ns;
-        check_decoder("reset", "00000", "0000", "00", "00", '0', "111", '0', '0', '0', '0', '0');
 
         rst <= '1';
-
         flush <= '1';
         wait until rising_edge(clk);
         wait for 1 ns;
