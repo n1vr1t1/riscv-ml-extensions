@@ -65,13 +65,11 @@ pc_sign_extension: sign_extention_pc
 
 next_pc <= std_logic_vector( unsigned( curr_pc ) + 4 );
 
-process ( clk ) begin
-    if rising_edge( clk ) then 
-        if branch_condition = '1' then
-            instruction <= ( others => '0' );
-        else
-            instruction <= instruction_signal;
-        end if;
+process ( branch_condition, instruction_signal ) begin
+    if branch_condition = '1' then
+        instruction <= ( others => '0' );
+    else
+        instruction <= instruction_signal;
     end if;
 end process;
 end Behavioral;
