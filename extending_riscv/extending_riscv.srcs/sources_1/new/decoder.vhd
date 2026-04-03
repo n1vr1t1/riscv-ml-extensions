@@ -25,7 +25,7 @@ entity decoder is
         fpu_en : out std_logic; -- indicates that the operation using the fpu (floating point unit)
         vpu_en : out std_logic; -- indicates that the operation using the vpu (vector processing unit)
         vec_reg_en : out std_logic; -- indicates that the value needs to be saved in the vector register
-        vec_data_mem_en : out std_logic; -- indicates that the value is written to the data memory
+        vecDM_en : out std_logic; -- indicates that the value is written to the data memory
         mlu_en : out std_logic); -- indicates that the operation is using the mlu (machine learning unit)
 end decoder;
 
@@ -44,7 +44,7 @@ process (rst, clk) begin
 		vpu_en <= '0';
         mlu_en <= '0';
         vec_reg_en <= '0';
-        vec_data_mem_en <= '0';
+        vecDM_en <= '0';
 		conditional_opcode  <= (others => '1');
     elsif rising_edge(clk) then 
 		if flush = '1' then
@@ -57,15 +57,15 @@ process (rst, clk) begin
             vpu_en <= '0';
             mlu_en <= '0';
             vec_reg_en <= '0';
-            vec_data_mem_en <= '0';
+            vecDM_en <= '0';
 			conditional_opcode  <= (others => '1');
 	    else -- normal operations (without flush)
 			opclass <= "00100";
 			conditional_opcode <= (others => '1'); -- default for when we dont have a branch instruction
 			c_select <= '0'; -- default for non-vector instructions -> taking the value from the register file 
-			vec_data_mem_en <= '0';
+			vecDM_en <= '0';
 			case opcode is
-				when "0000011" => -- load from memory to register file
+				when "0000011" => -- int lw from memory to normal register
 					opclass <= "00001";
 					operation_code <= "0000"; -- add
 					a_select <= "00";
@@ -74,7 +74,7 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 					vec_reg_en <= '0';
-				when "0000111" => -- load from memory to vector register
+				when "0000111" => -- float and vector load from memory to vector register
 					opclass <= "00001";
 					operation_code <= "0000"; -- add
 					a_select <= "00";
@@ -82,8 +82,11 @@ process (rst, clk) begin
 					vpu_en <= '0'; -- does not use the values from the vector register therefore the vpu does not need to be activated
 					fpu_en <= '0';
 					mlu_en <= '0';
-					vec_reg_en <= '1';
-				when "0100011" => -- store into memory
+					if funct3 = "010" or funct3 = "011" then -- lfw
+					   vec_reg_en <= '0';
+					else vec_reg_en <= '1';
+					end if;
+				when "0100011" => -- int store into memory
 					opclass <= "00010";
 					operation_code <= "0000"; -- add
 					a_select <= "00";
@@ -92,7 +95,7 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 					vec_reg_en <= '0';
-				when "0100111" => -- store into memory from vector register
+				when "0100111" => -- store vector or float into memory
 					opclass <= "00010";
 					operation_code <= "0000"; -- add
 					a_select <= "00";
@@ -101,7 +104,10 @@ process (rst, clk) begin
 					fpu_en <= '0';
 					mlu_en <= '0';
 					vec_reg_en <= '0'; -- vector register is not written
-					vec_data_mem_en <= '1'; -- indicates that the value needs to be written to data memory from vector register
+					if funct3 = "010" or funct3 = "011" then -- lfw
+					   vecDM_en <= '0'; -- writes float from normal register to DM
+					else vecDM_en <= '1'; -- writes an element from the vector into DM
+					end if;
 				when "0010011" => -- immediate
 					a_select <= "00";
 					b_select <= "01";
