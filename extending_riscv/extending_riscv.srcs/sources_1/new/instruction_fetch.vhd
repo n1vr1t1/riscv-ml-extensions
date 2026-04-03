@@ -13,8 +13,8 @@ end instruction_fetch_stage;
 
 architecture Behavioral of instruction_fetch_stage is
 
-signal program_counter_in : std_logic_vector( 11 downto 0 ); -- input of the program counter amd sign ext
-signal program_counter_out : std_logic_vector( 11 downto 0 ); -- pc to instr mem
+signal next_pc : std_logic_vector( 11 downto 0 ); -- input of the program counter amd sign ext
+signal curr_pc : std_logic_vector( 11 downto 0 ); -- pc to instr mem
 signal instruction_signal : STD_LOGIC_VECTOR( 31 downto 0 ); -- output of the instruction memory
 
 COMPONENT instruction_memory IS
@@ -42,8 +42,8 @@ end component;
 
 begin
 ifs_pc :program_counter
-    Port map( pc => program_counter_in,
-    		pc_out => program_counter_out,
+    Port map( pc => next_pc,
+    		pc_out => curr_pc,
     		branch_pc => branch_pc,
             branch_condition => branch_condition,
 		    clk => clk,
@@ -52,7 +52,7 @@ ifs_pc :program_counter
 ifs_mem : instruction_memory
     PORT MAP( clka => clk,
             wea(0) => '0' ,
-            addra => std_logic_vector( program_counter_out( 11 downto 2 )) ,
+            addra => std_logic_vector( curr_pc( 11 downto 2 )) ,
             dina => "00000000000000000000000000000000" ,
             douta => instruction_signal );
 
@@ -60,10 +60,10 @@ pc_sign_extension: sign_extention_pc
     Port map( flush => branch_condition,
             rst => rst,
             clk => clk,
-            pc => program_counter_in,
+            pc => next_pc,
             extended_pc => pc_out );
 
-program_counter_in <= std_logic_vector( unsigned( program_counter_out ) + 4 );
+next_pc <= std_logic_vector( unsigned( curr_pc ) + 4 );
 
 process ( clk ) begin
     if rising_edge( clk ) then 
