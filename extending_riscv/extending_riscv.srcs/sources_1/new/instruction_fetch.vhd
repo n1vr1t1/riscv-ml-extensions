@@ -60,7 +60,7 @@ pc_sign_extension: sign_extention_pc
     Port map( flush => branch_condition,
             rst => rst,
             clk => clk,
-            pc => program_counter_in,
+            pc => program_counter_out,
             extended_pc => pc_out );
 
 program_counter_in <= std_logic_vector( unsigned( program_counter_out ) + 4 );
