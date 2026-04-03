@@ -9,9 +9,9 @@ entity instruction_decode is
 		pc : in STD_LOGIC_VECTOR( 31 downto 0 ); -- forwarded to the next stage without being used
 		instruction : in STD_LOGIC_VECTOR( 31 downto 0 );
 		destination_value : in STD_LOGIC_VECTOR( 31 downto 0 ); -- writing value into register file
-		write_en : in STD_LOGIC; -- write enable for register file
+		wen : in STD_LOGIC; -- write enable for register file
 		destination_address : in STD_LOGIC_VECTOR( 4 DOWNTO 0 ); -- address in the normal and vector file 
-		vec_write_en : in std_logic; -- enable to indicate whether the vector file should be written into
+		vec_wen : in std_logic; -- enable to indicate whether the vector file should be written into
 		vec_destination_value : in std_logic_vector( 127 downto 0 ); -- value to be written into vector register
 		vec_dest_element : in std_logic_vector( 3 downto 0 ); -- element of the register to which the value should be written
 		pc_forward : out STD_LOGIC_VECTOR( 31 downto 0 ); -- value used for the execution stage
@@ -28,10 +28,11 @@ entity instruction_decode is
 		source_1 : out STD_LOGIC_VECTOR( 31 downto 0 ); -- value of the first source address
 		source_2 : out STD_LOGIC_VECTOR( 31 downto 0 ); -- value of the second source address
 		source_3 : out STD_LOGIC_VECTOR( 31 downto 0 ); -- value of the third/destination address
-		is_float : out std_logic;
-		is_ml : out std_logic;
-		is_vl : out std_logic;
+		float_en : out std_logic;
+		ml_en : out std_logic;
+		vu_en : out std_logic; -- vector unit enable
 		vec_reg_en : out std_logic;
+		vecDM_en : out std_logic;
 		vec1_data : out std_logic_vector( 127 downto 0 );
 		vec2_data : out std_logic_vector( 127 downto 0 );
         vec3_data : out std_logic_vector( 127 downto 0 ));
@@ -83,6 +84,7 @@ component decoder is
         fpu_en : out std_logic;
         vpu_en : out std_logic;
         vec_reg_en : out std_logic;
+        vecDM_en : out std_logic;
         mlu_en : out std_logic);
 end component;
 component immediate_generator is
@@ -106,7 +108,7 @@ reg_file_decode: register_file
     	r3 => instruction( 11 downto 7 ),
     	rd_in => destination_address,
     	rd_data_in => destination_value,
-    	we => write_en,
+    	we => wen,
     	r1_data => source_1,
     	r2_data => source_2,
         r3_data => source_3 );
@@ -115,7 +117,7 @@ vec_file_decode : vec_reg
 	port map( rst => rst,
 		clk => clk,
 		en => flush,
-		we => vec_write_en,
+		we => vec_wen,
 		vd_data_in => vec_destination_value,
 		vec_dest => destination_address,
 		vec_element => vec_dest_element,
@@ -139,10 +141,11 @@ decoder_decode : decoder
 		b_select => b_select,
         c_select => c_select,
 		conditional_opcode => conditional_opcode,
-		fpu_en => is_float,
+		fpu_en => float_en,
 		vec_reg_en => vec_reg_en,
-		vpu_en => is_vl,
-		mlu_en => is_ml ); 
+		vecDM_en => vecDM_en,
+		vpu_en => vu_en,
+		mlu_en => ml_en ); 
 
 imm_gen_decode : immediate_generator
   Port map( clk => clk,
@@ -160,16 +163,16 @@ process ( clk, rst ) begin
         r2_address <= ( others => '0' );
         r3_address <= ( others => '0' );
     elsif rising_edge( clk ) then 
-        if flush ='0' then 
-            pc_forward <= pc;
-            r1_address <= instruction( 19 downto 15 );
-            r2_address <= instruction( 24 downto 20 ); -- rewrite to have logic for vector write back through operations and store
-            r3_address <= instruction( 11 downto 7 );
-		else 
+        if flush = '1' then 
             pc_forward <= ( others => '0' );
             r1_address <= ( others => '0' );
             r2_address <= ( others => '0' );
             r3_address <= ( others => '0' );
+		else 
+            pc_forward <= pc;
+            r1_address <= instruction( 19 downto 15 );
+            r2_address <= instruction( 24 downto 20 ); -- rewrite to have logic for vector write back through operations and store
+            r3_address <= instruction( 11 downto 7 );
         end if;
     end if;
 end process;
