@@ -18,44 +18,56 @@ architecture Behavioral of comparator is
 begin
 process (operand_1 , operand_2 , cond_opcode) begin
 	case cond_opcode is
-		when "110" => branch_condition <=  '1'; -- jump and link
+		when "110" => branch_condition <= '1'; -- jump and link
 		when "000" => -- branch if equal
 			if operand_1 = operand_2 then
-				branch_condition <=  '1';
+				branch_condition <= '1';
 			else
-				branch_condition <=  '0';
+				branch_condition <= '0';
 			end if;
 		when "001" => -- branch if not equal
 			if operand_1 =  operand_2 then
-				branch_condition <=  '0';
+				branch_condition <= '0';
 			else
-				branch_condition <=  '1';
+				branch_condition <= '1';
 			end if;
-    	when "010" => -- branch if less than
-			if operand_1 < operand_2 then
-				branch_condition <=  '1';
+    	when "010" => -- branch if less than or equal
+			if signed(operand_1) < signed(operand_2) then
+				branch_condition <= '1';
 			else
-				branch_condition <=  '0';
+				branch_condition <= '0';
 			end if;
     	when "011" => -- branch if greater than
-			if operand_1 >= operand_2 then
-				branch_condition <=  '1';
+			if signed(operand_1) >= signed(operand_2) then
+				branch_condition <= '1';
 			else
-				branch_condition <=  '0';
+				branch_condition <= '0';
 			end if;
-    	when "100" =>  -- branch if less than or equal
-			if operand_1 <= operand_2 then
-				branch_condition <=  '1';
+    	when "100" =>  -- branch if less than
+			if signed(operand_1) < signed(operand_2) then
+				branch_condition <= '1';
 			else 
-			branch_condition <=  '0';
+			branch_condition <= '0';
 			end if;
     	when "101" => -- branch if greater than or equal
-			if operand_1 >= operand_2 then
-				branch_condition <=  '1';
+			if signed(operand_1) >= signed(operand_2) then
+				branch_condition <= '1';
 			else
-				branch_condition <=  '0';
+				branch_condition <= '0';
 			end if;
-		when others => branch_condition <=  '0';
+		when "110" => -- branch less than unsigned
+			if unsigned(operand_1) < unsigned(operand_2) then
+				branch_condition <= '1';
+			else
+				branch_condition <= '0';
+			end if;
+	 when "111" => -- branch greater than or equal to unsigned
+			if unsigned(operand_1) >= unsigned(operand_2) then
+				branch_condition <= '1';
+			else
+				branch_condition <= '0';
+			end if;
+		when others => branch_condition <= '0';
     end case;
 end process;
 end Behavioral;
