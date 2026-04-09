@@ -158,6 +158,12 @@ begin
                         else
                             alu_output <= std_logic_vector(resize(shift_right(op1_fp, 23), 32));
                         end if;
+                    when "1001" => -- set if greater then/max
+                        if op1_fp >= op2_fp then
+                            alu_output <= operand_1;
+                        else
+                            alu_output <= operand_2;
+                        end if;
                     when others =>
                         alu_output <= (others => '0');
                 end case;
