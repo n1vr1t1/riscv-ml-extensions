@@ -104,9 +104,9 @@ begin
             mul_fp := signed(op1_fp) * signed(op2_fp);
             multiply_result := (others => '0');
             if is_ml = '1' then -- ml operations with floating point operands
-                if opcode(0) = '1' then -- macc
+                if opcode(0) = '1' then -- fmacc
                     alu_output <= fixed_to_flt(signed( shift_right( mul_fp, 23 )( 55 downto 0 )) + op3_fp);
-                elsif opcode(1) = '1' then -- leaky relu
+                elsif opcode(1) = '1' then -- float leaky relu
                     if op1_fp >= 0 then
                         alu_output <= operand_1;
                     else
@@ -124,13 +124,13 @@ begin
                     when "0010" => -- mul
                         mul_fp := signed( op1_fp ) * signed( op2_fp );
                         alu_output <= fixed_to_flt(signed( shift_right( mul_fp, 23 )(55 downto 0) ));
-                    when "0011" => -- set if less than /min
+                    when "0011" => -- set if less than / min
                         if op1_fp < op2_fp then
                             alu_output <= operand_1;
                         else
                             alu_output <= operand_2;
                         end if;
-                    when "0100" => -- set if greater then/max
+                    when "0100" => -- set if greater than / max
                         if op1_fp > op2_fp then
                             alu_output <= operand_1;
                         else
@@ -158,7 +158,7 @@ begin
                         else
                             alu_output <= std_logic_vector(resize(shift_right(op1_fp, 23), 32));
                         end if;
-                    when "1001" => -- set if greater then/max
+                    when "1001" => -- set if greater than or equal
                         if op1_fp >= op2_fp then
                             alu_output <= operand_1;
                         else
