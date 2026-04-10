@@ -2,7 +2,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-
 entity reduction_unit is
  Port (operand_1 : in std_logic_vector(31 downto 0); -- vs1[0]
        operand_2 : in std_logic_vector(31 downto 0); -- vs2[0]
@@ -100,11 +99,11 @@ begin
                 op3_fp := flt_to_fixed(operand_3);
                 op4_fp := flt_to_fixed(operand_4);
                 op5_fp := flt_to_fixed(operand_5);
-                case opcode is
-                    when "000" => -- VFREDUSUM.VS AND VFREDOSUM.VS (both are treated the same for this implementation)
+                case opcode(1 downto 0) is
+                    when "00" => -- VFREDUSUM.VS and VFREDOSUM.VS (both are treated the same for this implementation)
                         temp_result := op1_fp + op2_fp + op3_fp + op4_fp + op5_fp;
                         result <= fixed_to_flt(temp_result);
-                    when "001" => -- VFREDMIN.VS
+                    when "01" => -- VFREDMIN.VS
                         temp_result := op1_fp;
                         if op2_fp < temp_result then
                             temp_result := op2_fp;
@@ -119,7 +118,7 @@ begin
                             temp_result := op5_fp;
                         end if;
                         result <= fixed_to_flt(temp_result);
-                    when "010" => -- VFREDMAX.VS
+                    when "10" => -- VFREDMAX.VS
                         temp_result := op1_fp;
                         if op2_fp > temp_result then
                             temp_result := op2_fp;
