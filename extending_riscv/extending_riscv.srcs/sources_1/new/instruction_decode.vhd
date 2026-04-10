@@ -31,6 +31,7 @@ entity instruction_decode is
 		float_en : out std_logic;
 		ml_en : out std_logic;
 		vu_en : out std_logic; -- vector unit enable
+        ru_en : out std_logic; -- reduction unit enable
 		vec_reg_en : out std_logic;
 		vecDM_en : out std_logic;
 		vec1_data : out std_logic_vector( 127 downto 0 );
@@ -58,8 +59,8 @@ component vec_reg is
         clk : in std_logic;
         en : in std_logic;
         we : in std_logic;
-        vd_data_in : std_logic_vector( 127 downto 0 );
-        vec_dest : in std_logic_vector( 4 downto 0 );
+        vd_data : std_logic_vector( 127 downto 0 );
+        vd : in std_logic_vector( 4 downto 0 );
         vec_element : in std_logic_vector( 3 downto 0 );
         v1 : in std_logic_vector( 4 downto 0 );
         v2 : in std_logic_vector( 4 downto 0 );
@@ -69,30 +70,29 @@ component vec_reg is
         v3_data : out std_logic_vector( 127 downto 0 ));
 end component;
 component decoder is
-  	Port ( rst : in std_logic;
+    Port (rst : in std_logic;
         clk : in std_logic;
-    	flush : in std_logic;
-    	opcode : in std_logic_vector(6 downto 0);
-		funct7 : in std_logic_vector(6 downto 0);
-		funct3 : in std_logic_vector(2 downto 0);
-        opclass : out STD_LOGIC_VECTOR(4 downto 0);
-        operation_code : out STD_LOGIC_VECTOR(3 downto 0);
-        a_select :out STD_LOGIC_VECTOR(1 downto 0);
-        b_select : out STD_LOGIC_VECTOR(1 downto 0);
-        c_select : out std_logic;
-        conditional_opcode : out STD_LOGIC_VECTOR(2 downto 0);
+    	flush : in std_logic; -- active low
+		instruction : in std_logic_vector(31 downto 0);
+        opclass : out STD_LOGIC_VECTOR (4 downto 0);
+        operation_code : out STD_LOGIC_VECTOR (3 downto 0); -- used by alu, fpu and mlu
+        a_select :out STD_LOGIC_VECTOR (1 downto 0);
+        b_select : out STD_LOGIC_VECTOR (1 downto 0);
+		c_select : out std_logic;
+        conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0);
         fpu_en : out std_logic;
         vpu_en : out std_logic;
         vec_reg_en : out std_logic;
         vecDM_en : out std_logic;
-        mlu_en : out std_logic);
+        mlu_en : out std_logic;
+		reduction_unit_en : out std_logic);
 end component;
 component immediate_generator is
   	Port ( rst : in std_logic;
           clk : in std_logic;
           flush : in std_logic;
           opcode : in STD_LOGIC_VECTOR( 6 downto 0 );
-          instruction : in STD_LOGIC_VECTOR( 31 downto 7 );
+          funct3 : in STD_LOGIC_VECTOR( 2 downto 0 );
           immediate : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end component;
 
@@ -118,8 +118,8 @@ vec_file_decode : vec_reg
 		clk => clk,
 		en => flush,
 		we => vec_wen,
-		vd_data_in => vec_destination_value,
-		vec_dest => destination_address,
+		vd_data => vec_destination_value,
+		vd => destination_address,
 		vec_element => vec_dest_element,
 		v1 => instruction ( 19 downto 15 ),
 		v2 => instruction( 24 downto 20 ),
@@ -132,9 +132,7 @@ decoder_decode : decoder
   Port map( clk => clk,
 		rst => rst,
 		flush => flush,
-		opcode => instruction( 6 downto 0 ),
-		funct7 =>  instruction( 31 downto 25 ),
-		funct3 =>  instruction( 14 downto 12 ),
+		instruction => instruction,
 		opclass => opclass,
 		operation_code => opcode,
 		a_select => a_select,
@@ -145,15 +143,16 @@ decoder_decode : decoder
 		vec_reg_en => vec_reg_en,
 		vecDM_en => vecDM_en,
 		vpu_en => vu_en,
-		mlu_en => ml_en ); 
+		mlu_en => ml_en,
+        reduction_unit_en => ru_en); 
 
 imm_gen_decode : immediate_generator
   Port map( clk => clk,
           rst => rst,
+          flush => flush,
           opcode => instruction( 6 downto 0 ), 
-          instruction => instruction( 31 downto 7 ),
-          immediate => immediate,
-          flush => flush );
+          funct3 => instruction( 14 downto 12 ),
+          immediate => immediate);
 		  
 -- for signals that need to be forwarded to the next stage without being
 process ( clk, rst ) begin
