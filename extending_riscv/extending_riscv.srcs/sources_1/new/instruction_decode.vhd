@@ -8,12 +8,12 @@ entity instruction_decode is
       	flush : in STD_LOGIC; -- active high, used for flushing 
 		pc : in STD_LOGIC_VECTOR( 31 downto 0 ); -- forwarded to the next stage without being used
 		instruction : in STD_LOGIC_VECTOR( 31 downto 0 );
-		destination_value : in STD_LOGIC_VECTOR( 31 downto 0 ); -- writing value into register file
-		wen : in STD_LOGIC; -- write enable for register file
-		destination_address : in STD_LOGIC_VECTOR( 4 DOWNTO 0 ); -- address in the normal and vector file 
-		vec_wen : in std_logic; -- enable to indicate whether the vector file should be written into
-		vec_destination_value : in std_logic_vector( 127 downto 0 ); -- value to be written into vector register
-		vec_dest_element : in std_logic_vector( 3 downto 0 ); -- element of the register to which the value should be written
+		rd_val_wb : in STD_LOGIC_VECTOR( 31 downto 0 ); -- writing value into register file
+		wen_wb : in STD_LOGIC; -- write enable for register file
+		dest_addr_wb : in STD_LOGIC_VECTOR( 4 DOWNTO 0 ); -- address in the normal and vector file 
+		vec_wen_wb : in std_logic; -- enable to indicate whether the vector file should be written into
+		vd_val_wb : in std_logic_vector( 127 downto 0 ); -- value to be written into vector register
+		vd_element : in std_logic_vector( 3 downto 0 ); -- element of the register to which the value should be written
 		pc_forward : out STD_LOGIC_VECTOR( 31 downto 0 ); -- value used for the execution stage
 		immediate : out STD_LOGIC_VECTOR( 31 downto 0 ); -- immediate value found by the immedate generator
 		opclass : out STD_LOGIC_VECTOR( 4 downto 0 );
@@ -106,9 +106,9 @@ reg_file_decode: register_file
         r1 => instruction( 19 downto 15 ),
     	r2 => instruction( 24 downto 20 ),
     	r3 => instruction( 11 downto 7 ),
-    	rd_in => destination_address,
-    	rd_data_in => destination_value,
-    	we => wen,
+    	rd_in => dest_addr_wb,
+    	rd_data_in => rd_val_wb,
+    	we => wen_wb,
     	r1_data => source_1,
     	r2_data => source_2,
         r3_data => source_3 );
@@ -117,10 +117,10 @@ vec_file_decode : vec_reg
 	port map( rst => rst,
 		clk => clk,
 		en => flush,
-		we => vec_wen,
-		vd_data => vec_destination_value,
-		vd => destination_address,
-		vec_element => vec_dest_element,
+		we => vec_wen_wb,
+		vd_data => vd_val_wb,
+		vd => dest_addr_wb,
+		vec_element => vd_element,
 		v1 => instruction ( 19 downto 15 ),
 		v2 => instruction( 24 downto 20 ),
 		v3 => instruction( 11 downto 7 ),
