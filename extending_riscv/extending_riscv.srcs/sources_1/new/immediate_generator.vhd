@@ -8,20 +8,17 @@ entity immediate_generator is
 --          stall : in std_logic;
           flush : in std_logic; --active low
           opcode : in STD_LOGIC_VECTOR( 6 downto 0 );
-          instruction : in STD_LOGIC_VECTOR( 31 downto 7 );
+          funct3 : in STD_LOGIC_VECTOR( 2 downto 0 );
           immediate : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end immediate_generator;
 
 architecture Behavioral of immediate_generator is
 begin
 process ( rst, clk )
-variable funct3 : STD_LOGIC_VECTOR( 2 downto 0 );
 begin
 	if rst = '0' then 
 		immediate <= ( others => '0' );
-        funct3 := (others => '0');
-	elsif rising_edge( clk ) then 
-        funct3 := instruction( 14 downto 12 );
+	elsif rising_edge( clk ) then
         if flush = '0' then
 	        case opcode is
 	            when "0010011" => -- immediate
@@ -67,6 +64,9 @@ begin
                     immediate( 11 ) <= instruction( 20 );
                     immediate( 19 downto 12 ) <= instruction( 19 downto 12 );
                     immediate( 31 downto 20 ) <= ( others => instruction( 31 ));
+                when "1100111" => -- jalr
+                    immediate( 10 downto 0 ) <= instruction( 30 downto 20 ); 
+                    immediate( 31 downto 11 ) <= ( others => instruction( 31 )); 
 	            when "0110111" => -- lui
                     immediate( 31 downto 12 ) <= instruction( 31 downto 12 );
                     immediate( 11 downto 0 ) <= ( others => '0' );
