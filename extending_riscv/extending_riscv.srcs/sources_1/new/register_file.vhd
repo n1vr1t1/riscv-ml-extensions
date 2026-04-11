@@ -5,7 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity register_file is
   port (rst : in std_logic;
     clk : in std_logic;
-    en : in std_logic; -- active low
+    -- en : in std_logic; -- active low
     r1 : in std_logic_vector( 4 downto 0 ); -- Source 1 address
     r2 : in std_logic_vector( 4 downto 0 ); -- Source 2 address
     r3 : in std_logic_vector( 4 downto 0 ); -- Source 3 address
@@ -31,26 +31,16 @@ reading :  process ( rst, clk ) begin
         r1_data <= (others => '0');
         r2_data <= (others => '0');
         r3_data <= (others => '0');
-    elsif rising_edge( clk ) then 
---    elsif rising_edge(clk) and stall = '0' then
-        if en='0' then 
-            r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
-            r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
-            r3_data <= reg_file( to_integer( unsigned( r3 ) ) );
- 	    else -- if enable is '1'  the outputs are flushed
---  		r1_data <= (others => '0');
-            r2_data <= (others => '0');
-            r3_data <= (others => '0');
- 	    end if;
+    elsif rising_edge( clk ) then
+        r1_data <= reg_file( to_integer( unsigned( r1 ) ) );
+        r2_data <= reg_file( to_integer( unsigned( r2 ) ) );
+        r3_data <= reg_file( to_integer( unsigned( r3 ) ) );
   	end if;
 end process;
 -- Writing process
 writing : process ( rst, we, rd_in, rd_data_in ) begin 
     if rst = '0' then 
-        reg_file( 0 ) <= ( others => '0' ); -- default
-        -- Might not need it since we are adding lui
-        -- reg_file( 30 ) <=  "00100000000000000000000000000000"; -- switches
-        -- reg_file( 31 ) <=  "00110000000000000000000000000000"; -- display
+        reg_file( 0 ) <= ( others => '0' ); -- default value of x0 is 0, and it cannot be changed
     else
         if we = '1' then
             if rd_in /= "00000" then

@@ -43,7 +43,6 @@ architecture Behavioral of instruction_decode is
 component register_file is
   	port ( rst : in std_logic;
     clk : in std_logic;
-    en : in std_logic; -- active low
     r1 : in std_logic_vector( 4 downto 0 ); 
     r2 : in std_logic_vector( 4 downto 0 ); 
     r3 : in std_logic_vector( 4 downto 0 ); 
@@ -57,7 +56,6 @@ end component;
 component vec_reg is
     Port( rst : in std_logic;
         clk : in std_logic;
-        en : in std_logic;
         we : in std_logic;
         vd_data : std_logic_vector( 127 downto 0 );
         vd : in std_logic_vector( 4 downto 0 );
@@ -102,7 +100,6 @@ begin
 reg_file_decode: register_file
   PORT map( rst => rst,
         clk => clk,
-    	en => flush,
         r1 => instruction( 19 downto 15 ),
     	r2 => instruction( 24 downto 20 ),
     	r3 => instruction( 11 downto 7 ),
@@ -116,7 +113,6 @@ reg_file_decode: register_file
 vec_file_decode : vec_reg
 	port map( rst => rst,
 		clk => clk,
-		en => flush,
 		we => vec_wen_wb,
 		vd_data => vd_val_wb,
 		vd => dest_addr_wb,
