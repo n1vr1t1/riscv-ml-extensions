@@ -8,7 +8,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity comparator is
-    Port( operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
+    Port(
+		rst : in STD_LOGIC;
+		clk : in STD_LOGIC; 
+		operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
         operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
         cond_opcode : in STD_LOGIC_VECTOR (2 downto 0);
         branch_condition : out STD_LOGIC );
@@ -16,58 +19,62 @@ end comparator;
 
 architecture Behavioral of comparator is
 begin
-process (operand_1 , operand_2 , cond_opcode) begin
-	case cond_opcode is
-		when "110" => branch_condition <= '1'; -- jump and link
-		when "000" => -- branch if equal
-			if operand_1 = operand_2 then
-				branch_condition <= '1';
-			else
+process (rst, clk) begin
+	if rst = '1' then
+		branch_condition <= '0';
+	elsif rising_edge(clk) then
+		case cond_opcode is
+			when "110" => branch_condition <= '1'; -- jump and link
+			when "000" => -- branch if equal
+				if operand_1 = operand_2 then
+					branch_condition <= '1';
+				else
+					branch_condition <= '0';
+				end if;
+			when "001" => -- branch if not equal
+				if operand_1 =  operand_2 then
+					branch_condition <= '0';
+				else
+					branch_condition <= '1';
+				end if;
+			when "010" => -- branch if less than or equal
+				if signed(operand_1) < signed(operand_2) then
+					branch_condition <= '1';
+				else
+					branch_condition <= '0';
+				end if;
+			when "011" => -- branch if greater than
+				if signed(operand_1) >= signed(operand_2) then
+					branch_condition <= '1';
+				else
+					branch_condition <= '0';
+				end if;
+			when "100" =>  -- branch if less than
+				if signed(operand_1) < signed(operand_2) then
+					branch_condition <= '1';
+				else 
 				branch_condition <= '0';
-			end if;
-		when "001" => -- branch if not equal
-			if operand_1 =  operand_2 then
-				branch_condition <= '0';
-			else
-				branch_condition <= '1';
-			end if;
-    	when "010" => -- branch if less than or equal
-			if signed(operand_1) < signed(operand_2) then
-				branch_condition <= '1';
-			else
-				branch_condition <= '0';
-			end if;
-    	when "011" => -- branch if greater than
-			if signed(operand_1) >= signed(operand_2) then
-				branch_condition <= '1';
-			else
-				branch_condition <= '0';
-			end if;
-    	when "100" =>  -- branch if less than
-			if signed(operand_1) < signed(operand_2) then
-				branch_condition <= '1';
-			else 
-			branch_condition <= '0';
-			end if;
-    	when "101" => -- branch if greater than or equal
-			if signed(operand_1) >= signed(operand_2) then
-				branch_condition <= '1';
-			else
-				branch_condition <= '0';
-			end if;
-		when "110" => -- branch less than unsigned
-			if unsigned(operand_1) < unsigned(operand_2) then
-				branch_condition <= '1';
-			else
-				branch_condition <= '0';
-			end if;
-	 when "111" => -- branch greater than or equal to unsigned
-			if unsigned(operand_1) >= unsigned(operand_2) then
-				branch_condition <= '1';
-			else
-				branch_condition <= '0';
-			end if;
-		when others => branch_condition <= '0';
-    end case;
+				end if;
+			when "101" => -- branch if greater than or equal
+				if signed(operand_1) >= signed(operand_2) then
+					branch_condition <= '1';
+				else
+					branch_condition <= '0';
+				end if;
+			when "110" => -- branch less than unsigned
+				if unsigned(operand_1) < unsigned(operand_2) then
+					branch_condition <= '1';
+				else
+					branch_condition <= '0';
+				end if;
+		when "111" => -- branch greater than or equal to unsigned
+				if unsigned(operand_1) >= unsigned(operand_2) then
+					branch_condition <= '1';
+				else
+					branch_condition <= '0';
+				end if;
+			when others => branch_condition <= '0';
+		end case;
+	end if;
 end process;
 end Behavioral;
