@@ -20,7 +20,6 @@ entity instruction_decode is
 		opcode : out STD_LOGIC_VECTOR( 3 downto 0 ); 
 		a_select : out STD_LOGIC_VECTOR(1 downto 0);
         b_select : out STD_LOGIC_VECTOR(1 downto 0);
-        c_select : out std_logic;
 		conditional_opcode : out STD_LOGIC_VECTOR( 2 downto 0 ); 
 		r1_address : out std_logic_vector( 4 downto 0 );
 		r2_address : out std_logic_vector( 4 downto 0 );
@@ -76,7 +75,6 @@ component decoder is
         operation_code : out STD_LOGIC_VECTOR (3 downto 0); -- used by alu, fpu and mlu
         a_select :out STD_LOGIC_VECTOR (1 downto 0);
         b_select : out STD_LOGIC_VECTOR (1 downto 0);
-		c_select : out std_logic;
         conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0);
         fpu_en : out std_logic;
         vpu_en : out std_logic;
@@ -133,7 +131,6 @@ decoder_decode : decoder
 		operation_code => opcode,
 		a_select => a_select,
 		b_select => b_select,
-        c_select => c_select,
 		conditional_opcode => conditional_opcode,
 		fpu_en => float_en,
 		vec_reg_en => vec_reg_en,

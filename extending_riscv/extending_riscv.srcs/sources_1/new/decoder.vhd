@@ -18,7 +18,6 @@ entity decoder is
         operation_code : out STD_LOGIC_VECTOR (3 downto 0); -- used by alu, fpu and mlu
         a_select :out STD_LOGIC_VECTOR (1 downto 0);
         b_select : out STD_LOGIC_VECTOR (1 downto 0);
-		c_select : out std_logic;
         conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0);
         fpu_en : out std_logic; -- indicates that the operation using the fpu (floating point unit)
         vpu_en : out std_logic; -- indicates that the operation using the vpu (vector processing unit)
@@ -47,7 +46,6 @@ process (rst, clk) begin
 		operation_code  <= (others => '0');
 		a_select <= "00";
 		b_select <= "00";
-		c_select <= '0';
 		fpu_en <= '0';
 		vpu_en <= '0';
         mlu_en <= '0';
@@ -61,7 +59,6 @@ process (rst, clk) begin
 			operation_code  <= (others => '1');
 			a_select <= "00";
 			b_select <= "00"; 
-			c_select <= '0';
 			fpu_en <= '0';
             vpu_en <= '0';
             mlu_en <= '0';
@@ -72,7 +69,6 @@ process (rst, clk) begin
 	    else
 			opclass <= "00100";
 			conditional_opcode <= (others => '1'); -- default for when we dont have a branch instruction
-			c_select <= '0'; -- default for non-vector instructions -> taking the value from the register file 
 			vecDM_en <= '0';
 			vpu_en <= '0';
 			fpu_en <= '0';
@@ -226,7 +222,6 @@ process (rst, clk) begin
 					vpu_en <= '1';
 					vec_reg_en <= '1';
 					a_select <= "10"; -- for vector operations, operand 2 is always from the vector register
-					c_select <= '1'; -- takes the value from the vector register instead of the normal register file
 					case funct6 is
 						when "000000" =>  -- vadd and vredsum
 							operation_code <= "0000"; -- add
