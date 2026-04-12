@@ -4,9 +4,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity instruction_fetch_stage is
     Port( clk : in STD_LOGIC;
-          rst: in STD_LOGIC;
-          branch_condition: in std_logic; -- active high
-          branch_pc: in STD_LOGIC_VECTOR( 11 downto 0 );
+          rst : in STD_LOGIC;
+          branch_condition : in std_logic; -- active high
+          branch_pc : in STD_LOGIC_VECTOR( 11 downto 0 );
           pc_out : out STD_LOGIC_VECTOR( 31 downto 0 );
           instruction : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end instruction_fetch_stage;
