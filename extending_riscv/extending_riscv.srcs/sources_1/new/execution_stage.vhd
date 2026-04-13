@@ -205,7 +205,6 @@ selecting_opb : process (b_select, immediate, vec1_data, source_1, source_2) beg
             alu2_op_b <= source_1;
             alu3_op_b <= source_1;
             alu4_op_b <= source_1;
-
         when others => 
             alu1_op_b <= source_2;
             alu2_op_b <= (others => '0');
