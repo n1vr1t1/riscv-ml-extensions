@@ -45,14 +45,18 @@ entity control_unit is
 end control_unit;
 
 architecture Behavioral of control_unit is
-
+signal nonvec_instructions : std_logic;
+signal vec_instructions : std_logic;
 begin
+nonvec_instructions <= vec_en_if and vec_en_ex;
+vec_instructions <= vec_en_id and vec_en_ex;
 
 flushing: process (branch_condition, a_select, b_select) begin
 	flush <= a_select and b_select and branch_condition;
 end process;
 --when hazards are 1 instruction apart ie. there is another instruction in between
-nonconsecutive_data_forwarding : process (rst, clk) begin
+nonconsecutive_data_forwarding : process (rst, clk) 
+begin
     if rst = '0' then 
         data_hazard_1 <= '0';
         data_hazard_2 <= '0';
@@ -66,11 +70,11 @@ nonconsecutive_data_forwarding : process (rst, clk) begin
                 load_hazard_1 <= '0';
                 load_hazard_2 <= '0';
                 load_hazard_3 <= '0';
-                load_vector_hazard_1 <= (others => '0');
-                load_vector_hazard_2 <= (others => '0');
-                load_vector_hazard_3 <= (others => '0');
+                vec_load_hazard_1 <= (others => '0');
+                vec_load_hazard_2 <= (others => '0');
+                vec_load_hazard_3 <= (others => '0');
                 if rs1_if = rd_ex then 
-                    if (vec_en_if and vec_en_ex) then
+                    if (nonvec_instructions = '1') then
                         vec_data_hazard_1 <= '1';
                         data_hazard_1 <= '0';
                     else
@@ -82,7 +86,7 @@ nonconsecutive_data_forwarding : process (rst, clk) begin
                     data_hazard_1 <= '0';
                 end if;
                 if rs2_if = rd_ex then 
-                   if (vec_en_if and vec_en_ex) then
+                   if (nonvec_instructions = '1') then
                         vec_data_hazard_2 <= '1';
                         data_hazard_2 <= '0';
                     else
@@ -94,7 +98,7 @@ nonconsecutive_data_forwarding : process (rst, clk) begin
                     vec_data_hazard_2 <= '0';
                 end if; 
                 if rs3_if = rd_ex then
-                    if (vec_en_if and vec_en_ex) then
+                    if (nonvec_instructions = '1') then
                         vec_data_hazard_3 <= '1';
                         data_hazard_3 <= '0';
                     else
@@ -113,7 +117,7 @@ nonconsecutive_data_forwarding : process (rst, clk) begin
                 vec_data_hazard_2 <= '0';
                 vec_data_hazard_3 <= '0';
                 if rs1_if = rd_ex then 
-                    if (vec_en_if and vec_en_ex) then
+                    if (nonvec_instructions = '1') then
                         vec_load_hazard_1 <= vd_element;
                         load_hazard_1 <= '0';
                     else
@@ -125,7 +129,7 @@ nonconsecutive_data_forwarding : process (rst, clk) begin
                     vec_load_hazard_1 <= (others => '0');
                 end if;
                 if rs2_if = rd_ex then 
-                    if (vec_en_if and vec_en_ex) then
+                    if (nonvec_instructions = '1') then
                         vec_load_hazard_2 <= vd_element;
                         load_hazard_2 <= '0';
                     else
@@ -137,7 +141,7 @@ nonconsecutive_data_forwarding : process (rst, clk) begin
                     vec_load_hazard_2 <= (others => '0');
                 end if;
                 if rs3_if = rd_ex then 
-                    if (vec_en_if and vec_en_ex) then
+                    if (nonvec_instructions = '1') then
                         vec_load_hazard_3 <= vd_element;
                         load_hazard_3 <= '0';
                     else
@@ -180,44 +184,61 @@ nonconsecutive_data_forwarding : process (rst, clk) begin
     --no else
     end if;
 end process;
-data_fowarding_operation : process (rs1_id, rs2_id, rs3_id, rd_ex, opclass) begin
-    if rd_ex /= "00000" then
-        if opclass = "00100" then
-            if rs1_id = rd_ex then 
-                if (vec_en_id and vec_en_ex) then
-                    con_vd_hazard_1 <= '1';
-                    con_data_hazard_1 <= '0';
-                else
+data_fowarding_operation : process (rst, rs1_id, rs2_id, rs3_id, rd_ex, opclass, vec_instructions) 
+begin
+    if rst = '0' then 
+        con_data_hazard_1 <= '0';
+        con_data_hazard_2 <= '0';
+        con_data_hazard_3 <= '0';
+        con_vd_hazard_1 <= '0';
+        con_vd_hazard_2 <= '0';
+        con_vd_hazard_3 <= '0';
+    else
+        if rd_ex /= "00000" then
+            if opclass = "00100" then
+                if rs1_id = rd_ex then 
+                    if (vec_instructions = '1') then
+                        con_vd_hazard_1 <= '1';
+                        con_data_hazard_1 <= '0';
+                    else
+                        con_vd_hazard_1 <= '0';
+                        con_data_hazard_1 <= '1';
+                    end if;
+                else 
                     con_vd_hazard_1 <= '0';
-                    con_data_hazard_1 <= '1';
+                    con_data_hazard_1 <= '0';
                 end if;
-            else 
-                con_vd_hazard_1 <= '0';
-                con_data_hazard_1 <= '0';
-            end if;
-            if rs2_id = rd_ex then
-                if (vec_en_id and vec_en_ex) then
-                    con_vd_hazard_2 <= '1';
-                    con_data_hazard_2 <= '0';
-                else
+                if rs2_id = rd_ex then
+                    if (vec_instructions = '1') then
+                        con_vd_hazard_2 <= '1';
+                        con_data_hazard_2 <= '0';
+                    else
+                        con_vd_hazard_2 <= '0';
+                        con_data_hazard_2 <= '1';
+                    end if;
+                else 
                     con_vd_hazard_2 <= '0';
-                    con_data_hazard_2 <= '1';
+                    con_data_hazard_2 <= '0';
                 end if;
-            else 
-                con_vd_hazard_2 <= '0';
-                con_data_hazard_2 <= '0';
-            end if;
-            if rs3_id = rd_ex then
-                if (vec_en_id and vec_en_ex) then
-                    con_vd_hazard_3 <= '1';
-                    con_data_hazard_3 <= '0';
-                else
+                if rs3_id = rd_ex then
+                    if (vec_instructions = '1') then
+                        con_vd_hazard_3 <= '1';
+                        con_data_hazard_3 <= '0';
+                    else
+                        con_vd_hazard_3 <= '0';
+                        con_data_hazard_3 <= '1';
+                    end if;
+                else 
                     con_vd_hazard_3 <= '0';
-                    con_data_hazard_3 <= '1';
+                    con_data_hazard_3 <= '0';
                 end if;
             else 
-                con_vd_hazard_3 <= '0';
+                con_data_hazard_1 <= '0';
+                con_data_hazard_2 <= '0';
                 con_data_hazard_3 <= '0';
+                con_vd_hazard_1 <= '0';
+                con_vd_hazard_2 <= '0';
+                con_vd_hazard_3 <= '0';
             end if;
         else 
             con_data_hazard_1 <= '0';
@@ -227,13 +248,6 @@ data_fowarding_operation : process (rs1_id, rs2_id, rs3_id, rd_ex, opclass) begi
             con_vd_hazard_2 <= '0';
             con_vd_hazard_3 <= '0';
         end if;
-    else 
-        con_data_hazard_1 <= '0';
-        con_data_hazard_2 <= '0';
-        con_data_hazard_3 <= '0';
-        con_vd_hazard_1 <= '0';
-        con_vd_hazard_2 <= '0';
-        con_vd_hazard_3 <= '0';
-	end if;
+    end if;
 end process;
 end Behavioral;
