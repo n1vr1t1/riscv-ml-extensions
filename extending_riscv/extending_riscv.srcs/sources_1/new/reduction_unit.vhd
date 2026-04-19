@@ -90,8 +90,8 @@ function flt_to_fixed(x : std_logic_vector(31 downto 0))
     end function;
 begin
     process(rst, clk)
-    variable temp_result : std_logic_vector(31 downto 0);
-    variable op1_fp, op2_fp, op3_fp, op4_fp, op5_fp : signed(55 downto 0);
+    variable temp_result_int : std_logic_vector(31 downto 0);
+    variable op1_fp, op2_fp, op3_fp, op4_fp, op5_fp, temp_flt : signed(55 downto 0);
     
     begin
         if rst = '1' then
@@ -104,40 +104,41 @@ begin
                     op3_fp := flt_to_fixed(operand_3);
                     op4_fp := flt_to_fixed(operand_4);
                     op5_fp := flt_to_fixed(operand_5);
+                    temp_result_int := (others => '0');
                     case opcode(1 downto 0) is
                         when "00" => -- VFREDUSUM.VS and VFREDOSUM.VS (both are treated the same for this implementation)
-                            temp_result := op1_fp + op2_fp + op3_fp + op4_fp + op5_fp;
-                            result <= fixed_to_flt(temp_result);
+                            temp_flt := op1_fp + op2_fp + op3_fp + op4_fp + op5_fp;
+                            result <= fixed_to_flt(temp_flt);
                         when "01" => -- VFREDMIN.VS
-                            temp_result := op1_fp;
-                            if op2_fp < temp_result then
-                                temp_result := op2_fp;
+                            temp_flt := op1_fp;
+                            if op2_fp < temp_flt then
+                                temp_flt := op2_fp;
                             end if;
-                            if op3_fp < temp_result then
-                                temp_result := op3_fp;
+                            if op3_fp < temp_flt then
+                                temp_flt := op3_fp;
                             end if;
-                            if op4_fp < temp_result then
-                                temp_result := op4_fp;
+                            if op4_fp < temp_flt then
+                                temp_flt := op4_fp;
                             end if;
-                            if op5_fp < temp_result then
-                                temp_result := op5_fp;
+                            if op5_fp < temp_flt then
+                                temp_flt := op5_fp;
                             end if;
-                            result <= fixed_to_flt(temp_result);
+                            result <= fixed_to_flt(temp_flt);
                         when "10" => -- VFREDMAX.VS
-                            temp_result := op1_fp;
-                            if op2_fp > temp_result then
-                                temp_result := op2_fp;
+                            temp_flt := op1_fp;
+                            if op2_fp > temp_flt then
+                                temp_flt := op2_fp;
                             end if;
-                            if op3_fp > temp_result then
-                                temp_result := op3_fp;
+                            if op3_fp > temp_flt then
+                                temp_flt := op3_fp;
                             end if;
-                            if op4_fp > temp_result then
-                                temp_result := op4_fp;
+                            if op4_fp > temp_flt then
+                                temp_flt := op4_fp;
                             end if;
-                            if op5_fp > temp_result then
-                                temp_result := op5_fp;
+                            if op5_fp > temp_flt then
+                                temp_flt := op5_fp;
                             end if;
-                            result <= fixed_to_flt(temp_result);
+                            result <= fixed_to_flt(temp_flt);
                         when others =>
                             result <= (others => '0'); -- Default case for unsupported FP opcodes
                     end case;
@@ -147,6 +148,7 @@ begin
                     op3_fp := (others => '0');
                     op4_fp := (others => '0');
                     op5_fp := (others => '0');
+                    temp_flt := (others => '0');
                     case opcode is
                         when "000" => -- VREDSUM.VS
                             result <= std_logic_vector(unsigned(operand_1) + unsigned(operand_2) + unsigned(operand_3) + unsigned(operand_4) + unsigned(operand_5));
@@ -157,35 +159,35 @@ begin
                         when "011" => -- VREDXOR.VS
                             result <= operand_1 xor operand_2 xor operand_3 xor operand_4 xor operand_5;
                         when "100" => -- VREDMIN.VS
-                            temp_result := operand_1;
-                            if unsigned(operand_2) < unsigned(temp_result) then
-                                temp_result := operand_2;
+                            temp_result_int := operand_1;
+                            if unsigned(operand_2) < unsigned(temp_result_int) then
+                                temp_result_int := operand_2;
                             end if;
-                            if unsigned(operand_3) < unsigned(temp_result) then
-                                temp_result := operand_3;
+                            if unsigned(operand_3) < unsigned(temp_result_int) then
+                                temp_result_int := operand_3;
                             end if;
-                            if unsigned(operand_4) < unsigned(temp_result) then
-                                temp_result := operand_4;
+                            if unsigned(operand_4) < unsigned(temp_result_int) then
+                                temp_result_int := operand_4;
                             end if;
-                            if unsigned(operand_5) < unsigned(temp_result) then
-                                temp_result := operand_5;
+                            if unsigned(operand_5) < unsigned(temp_result_int) then
+                                temp_result_int := operand_5;
                             end if;
-                            result <= temp_result;
+                            result <= temp_result_int;
                         when "101" => -- VREDMAX.VS
-                            temp_result := operand_1;
-                            if unsigned(operand_2) > unsigned(temp_result) then
-                                temp_result := operand_2;
+                            temp_result_int := operand_1;
+                            if unsigned(operand_2) > unsigned(temp_result_int) then
+                                temp_result_int := operand_2;
                             end if;
-                            if unsigned(operand_3) > unsigned(temp_result) then
-                                temp_result := operand_3;
+                            if unsigned(operand_3) > unsigned(temp_result_int) then
+                                temp_result_int := operand_3;
                             end if;
-                            if unsigned(operand_4) > unsigned(temp_result) then
-                                temp_result := operand_4;
+                            if unsigned(operand_4) > unsigned(temp_result_int) then
+                                temp_result_int := operand_4;
                             end if;
-                            if unsigned(operand_5) > unsigned(temp_result) then
-                                temp_result := operand_5;
+                            if unsigned(operand_5) > unsigned(temp_result_int) then
+                                temp_result_int := operand_5;
                             end if;
-                            result <= temp_result;
+                            result <= temp_result_int;
                         when others =>
                             result <= (others => '0'); -- Default case for unsupported opcodes
                     end case;
