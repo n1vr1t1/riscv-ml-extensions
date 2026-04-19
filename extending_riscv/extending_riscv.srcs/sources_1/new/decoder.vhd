@@ -19,6 +19,7 @@ entity decoder is
         a_select :out STD_LOGIC_VECTOR (1 downto 0);
         b_select : out STD_LOGIC_VECTOR (1 downto 0);
         conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0);
+		uncond_branch : out STD_LOGIC; -- indicates whether the instruction is an unconditional branch (jal, jalr)
         fpu_en : out std_logic; -- indicates that the operation using the fpu (floating point unit)
         vpu_en : out std_logic; -- indicates that the operation using the vpu (vector processing unit)
         vec_reg_en : out std_logic; -- indicates that the value needs to be saved in the vector register
@@ -53,6 +54,7 @@ process (rst, clk) begin
         vecDM_en <= '0';
 		conditional_opcode  <= (others => '1');
 		reduction_unit_en <= '0';
+		uncond_branch <= '0';
     elsif rising_edge(clk) then 
 		if flush = '1' then
             opclass <= (others => '0');
@@ -63,6 +65,7 @@ process (rst, clk) begin
             vpu_en <= '0';
             mlu_en <= '0';
             vec_reg_en <= '0';
+			uncond_branch <= '0';
             vecDM_en <= '0';
 			conditional_opcode  <= (others => '1');
 			reduction_unit_en <= '0';
@@ -74,6 +77,7 @@ process (rst, clk) begin
 			fpu_en <= '0';
 			mlu_en <= '0';
 			vec_reg_en <= '0';
+			uncond_branch <= '0';
 			reduction_unit_en <= '0';
 			case opcode is
 				when "0000011" => -- int lw from memory
@@ -166,13 +170,15 @@ process (rst, clk) begin
 					a_select <= "01";
 					b_select <= "01";
 					operation_code <= "0000";
-					conditional_opcode <= "110";
+					conditional_opcode <= "000";
+					uncond_branch <= '1';
 				when "1100111" => -- jump and link register
 					opclass <= "10000";
 					a_select <= "00";
 					b_select <= "01";
 					operation_code <= "0000";
-					conditional_opcode <= "110";
+					uncond_branch <= '1';
+					conditional_opcode <= "000";
 				when "0110111" => -- lui
 					operation_code <= "1100";
 					a_select <= "00";
