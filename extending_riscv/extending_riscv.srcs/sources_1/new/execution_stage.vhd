@@ -22,6 +22,7 @@ entity execution_stage is
         vec2_data : in std_logic_vector( 127 downto 0 );
         vec3_data : in std_logic_vector( 127 downto 0 );
         conditional_opcode : in STD_LOGIC_VECTOR( 2 downto 0 );
+        uncond_branch : in STD_LOGIC; 
         alu_opcode : in STD_LOGIC_VECTOR( 3 downto 0 );
         a_select : in STD_LOGIC_VECTOR(1 downto 0);
         b_select : in STD_LOGIC_VECTOR(1 downto 0);
@@ -61,6 +62,7 @@ architecture Behavioral of execution_stage is
             rst : in std_logic;
             operand_1 : in STD_LOGIC_VECTOR (31 downto 0);
             operand_2 : in STD_LOGIC_VECTOR (31 downto 0);
+            uncond_branch : in STD_LOGIC; 
             cond_opcode : in STD_LOGIC_VECTOR (2 downto 0);
             branch_condition : out STD_LOGIC 
         );
@@ -107,6 +109,7 @@ begin
             operand_1 => source_1,
             operand_2 => source_2,
             cond_opcode => conditional_opcode,
+            uncond_branch => uncond_branch,
             branch_condition => branch_condition );
     alu_1 : alu
         Port map(
@@ -239,11 +242,11 @@ forwarding_signals : process (rst, clk) begin
         vreg_wen_forward <= vreg_wen;
         vec3_out <= vec3_data;
         pc_out <= pc_in;
-        dest_ad_out <= dest_ad;
-        a_sel_out <= a_select;
-        b_sel_out <= b_select;
+        dest_ad_out <= dest_ad_in;
+        a_sel_out <= a_select(0);
+        b_sel_out <= b_select(0);
         opclass_out <= opclass_in;
-        source2_out <= source2;
+        source2_out <= source_2;
         address_2_out <= address_2;
         vDM_wen_forward <= vDM_wen;
     end if;
