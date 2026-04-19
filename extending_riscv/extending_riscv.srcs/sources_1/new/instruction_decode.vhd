@@ -20,7 +20,8 @@ entity instruction_decode is
 		opcode : out STD_LOGIC_VECTOR( 3 downto 0 ); 
 		a_select : out STD_LOGIC_VECTOR(1 downto 0);
         b_select : out STD_LOGIC_VECTOR(1 downto 0);
-		conditional_opcode : out STD_LOGIC_VECTOR( 2 downto 0 ); 
+		conditional_opcode : out STD_LOGIC_VECTOR( 2 downto 0 );
+        uncond_branch : out STD_LOGIC; 
 		r1_address : out std_logic_vector( 4 downto 0 );
 		r2_address : out std_logic_vector( 4 downto 0 );
 		r3_address : out STD_LOGIC_vector( 4 downto 0 ); -- destination and source 3 address 
@@ -76,6 +77,7 @@ component decoder is
         a_select :out STD_LOGIC_VECTOR (1 downto 0);
         b_select : out STD_LOGIC_VECTOR (1 downto 0);
         conditional_opcode : out STD_LOGIC_VECTOR (2 downto 0);
+        uncond_branch : out STD_LOGIC;
         fpu_en : out std_logic;
         vpu_en : out std_logic;
         vec_reg_en : out std_logic;
@@ -86,9 +88,9 @@ end component;
 component immediate_generator is
   	Port ( rst : in std_logic;
           clk : in std_logic;
-          flush : in std_logic;
+          flush : in std_logic; --active low
           opcode : in STD_LOGIC_VECTOR( 6 downto 0 );
-          funct3 : in STD_LOGIC_VECTOR( 2 downto 0 );
+          instruction : in STD_LOGIC_VECTOR( 31 downto 7 );
           immediate : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end component;
 
@@ -132,6 +134,7 @@ decoder_decode : decoder
 		a_select => a_select,
 		b_select => b_select,
 		conditional_opcode => conditional_opcode,
+        uncond_branch => uncond_branch,
 		fpu_en => float_en,
 		vec_reg_en => vec_reg_en,
 		vecDM_en => vecDM_en,
@@ -144,7 +147,7 @@ imm_gen_decode : immediate_generator
           rst => rst,
           flush => flush,
           opcode => instruction( 6 downto 0 ), 
-          funct3 => instruction( 14 downto 12 ),
+          instruction => instruction( 31 downto 7 ),
           immediate => immediate);
 		  
 -- for signals that need to be forwarded to the next stage without being
