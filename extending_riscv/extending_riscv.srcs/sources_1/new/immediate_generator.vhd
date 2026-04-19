@@ -8,14 +8,16 @@ entity immediate_generator is
 --          stall : in std_logic;
           flush : in std_logic; --active low
           opcode : in STD_LOGIC_VECTOR( 6 downto 0 );
-          funct3 : in STD_LOGIC_VECTOR( 2 downto 0 );
+          instruction : in STD_LOGIC_VECTOR( 31 downto 7 );
           immediate : out STD_LOGIC_VECTOR( 31 downto 0 ));
 end immediate_generator;
 
 architecture Behavioral of immediate_generator is
 begin
 process ( rst, clk )
+variable funct3 : std_logic_vector( 2 downto 0 );
 begin
+    funct3 := instruction( 14 downto 12 );
 	if rst = '0' then 
 		immediate <= ( others => '0' );
 	elsif rising_edge( clk ) then
