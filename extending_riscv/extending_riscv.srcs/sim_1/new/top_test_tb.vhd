@@ -26,6 +26,13 @@ clk_process: process begin
     wait for clk_period;
 end process;
 
+process begin
+    rst_tb <= '0';
+    wait for 15ns;
+    rst_tb <= '1';
+    wait;
+end process;
+
 --actual_process: process begin
 --    flush <= '0';
 --    write_enable_from_wb <= '0';
