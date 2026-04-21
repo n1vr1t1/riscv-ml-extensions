@@ -15,6 +15,7 @@ architecture Behavioral of instruction_fetch_stage is
 
 signal next_pc : std_logic_vector( 11 downto 0 ); -- input of the program counter amd sign ext
 signal curr_pc : std_logic_vector( 11 downto 0 ); -- pc to instr mem
+signal instruction_addr : std_logic_vector( 11 downto 0 ); -- pc to instr mem
 signal instruction_signal : STD_LOGIC_VECTOR( 31 downto 0 ); -- output of the instruction memory
 
 COMPONENT instruction_memory IS
@@ -52,7 +53,7 @@ ifs_pc :program_counter
 ifs_mem : instruction_memory
     PORT MAP( clka => clk,
             wea(0) => '0' ,
-            addra => std_logic_vector( curr_pc( 11 downto 2 )) ,
+            addra => std_logic_vector( instruction_addr( 11 downto 2 )) ,
             dina => "00000000000000000000000000000000" ,
             douta => instruction_signal );
 
@@ -63,7 +64,15 @@ pc_sign_extension: sign_extention_pc
             pc => next_pc,
             extended_pc => pc_out );
 
-next_pc <= std_logic_vector( unsigned( curr_pc ) + 4 );
+process (branch_condition, curr_pc) begin
+    if branch_condition = '1' then
+        next_pc <= (others => '0');
+        instruction_addr <= (others => '0');
+    else
+        next_pc <= std_logic_vector( unsigned( curr_pc ) + 4 );
+        instruction_addr <= curr_pc;
+    end if;
+end process;
 
 process ( branch_condition, instruction_signal ) begin
     if branch_condition = '1' then
