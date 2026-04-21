@@ -216,7 +216,7 @@ selecting_opb : process (b_select, immediate, vec1_data, source_1, source_2) beg
     end case;
 end process;
 
-selecting_opc : process (vpu_en, vec3_data, source_3) begin
+selecting_opc : process (flush, vpu_en, vec3_data, source_3) begin
     if vpu_en = '1' then
         alu1_op_c <= vec3_data( 31 downto 0 );
     else
@@ -225,7 +225,7 @@ selecting_opc : process (vpu_en, vec3_data, source_3) begin
 end process;
 
 forwarding_signals : process (rst, clk) begin
-    if rst = '1' then
+    if rst = '0' then
         red_signal <= '0';
         vreg_wen_forward <= '0';
         vec3_out <= (others => '0');
@@ -238,17 +238,31 @@ forwarding_signals : process (rst, clk) begin
         address_2_out <= (others => '0');
         vDM_wen_forward <= '0';
     elsif rising_edge(clk) then
-        red_signal <= red_en;
-        vreg_wen_forward <= vreg_wen;
-        vec3_out <= vec3_data;
-        pc_out <= pc_in;
-        dest_ad_out <= dest_ad_in;
-        a_sel_out <= a_select(0);
-        b_sel_out <= b_select(0);
-        opclass_out <= opclass_in;
-        source2_out <= source_2;
-        address_2_out <= address_2;
-        vDM_wen_forward <= vDM_wen;
+        if flush = '1' then 
+            red_signal <= '0';
+            vreg_wen_forward <= '0';
+            vec3_out <= (others => '0');
+            pc_out <= (others => '0');
+            dest_ad_out <= (others => '0');
+            a_sel_out <= '0';
+            b_sel_out <= '0';
+            opclass_out <= (others => '0');
+            source2_out <= (others => '0');
+            address_2_out <= (others => '0');
+            vDM_wen_forward <= '0';
+        else
+            red_signal <= red_en;
+            vreg_wen_forward <= vreg_wen;
+            vec3_out <= vec3_data;
+            pc_out <= pc_in;
+            dest_ad_out <= dest_ad_in;
+            a_sel_out <= a_select(0);
+            b_sel_out <= b_select(0);
+            opclass_out <= opclass_in;
+            source2_out <= source_2;
+            address_2_out <= address_2;
+            vDM_wen_forward <= vDM_wen;
+        end if;
     end if;
 end process;
 end Behavioral;
