@@ -36,6 +36,7 @@ component instruction_decode is
 		a_select : out STD_LOGIC_VECTOR(1 downto 0);
         b_select : out STD_LOGIC_VECTOR(1 downto 0);
 		conditional_opcode : out STD_LOGIC_VECTOR( 2 downto 0 ); 
+        uncond_branch : out STD_LOGIC;
 		r1_address : out std_logic_vector( 4 downto 0 );
 		r2_address : out std_logic_vector( 4 downto 0 );
 		r3_address : out STD_LOGIC_vector( 4 downto 0 ); -- destination and source 3 address 
@@ -62,6 +63,7 @@ component execution_stage is
         vec1_data : in std_logic_vector( 127 downto 0 );
         vec2_data : in std_logic_vector( 127 downto 0 );
         vec3_data : in std_logic_vector( 127 downto 0 );
+        uncond_branch : in STD_LOGIC; 
         conditional_opcode : in STD_LOGIC_VECTOR( 2 downto 0 );
         alu_opcode : in STD_LOGIC_VECTOR( 3 downto 0 );
         a_select : in STD_LOGIC_VECTOR(1 downto 0);
@@ -94,7 +96,7 @@ component execution_stage is
         source2_out : out STD_LOGIC_VECTOR( 31 downto 0 )
     );
 end component;
-COMPONENT data_memory
+COMPONENT data_mem
  PORT (clka : IN STD_LOGIC;
      wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
      addra : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
@@ -152,10 +154,10 @@ component control_unit is
 		load_hazard_1 : out std_logic;
 		load_hazard_2 : out std_logic;
 		load_hazard_3 : out std_logic;
-        vec_load_hazard_1 : out STD_LOGIC_VECTOR(4 downto 0);
-        vec_load_hazard_2 : out STD_LOGIC_VECTOR(4 downto 0);
-        vec_load_hazard_3 : out STD_LOGIC_VECTOR(4 downto 0);
-        vd_element : in std_logic_vector(4 downto 0);
+        vec_load_hazard_1 : out STD_LOGIC_VECTOR(3 downto 0);
+        vec_load_hazard_2 : out STD_LOGIC_VECTOR(3 downto 0);
+        vec_load_hazard_3 : out STD_LOGIC_VECTOR(3 downto 0);
+        vd_element : in std_logic_vector(3 downto 0);
     	--signals for flushing
     	a_select : in STD_LOGIC;
         b_select : in STD_LOGIC;
@@ -187,12 +189,12 @@ signal is_float_id_ex : std_logic;
 signal is_ml_id_ex : std_logic;
 signal ru_en_id_ex : std_logic;
 signal vu_id_ex : std_logic;
+signal uncond_branch_id_ex : std_logic;
 signal vec_reg_en_id_ex : std_logic;
 signal vecDM_en_id_ex : std_logic;
-signal vec1_data_id_ex : std_logic_vector( 127 downto 0 );
-signal vec2_data_id_ex : std_logic_vector( 127 downto 0 );
-signal vec3_data_id_ex : std_logic_vector( 127 downto 0 );
-signal destination_address_id_ex : STD_LOGIC_VECTOR( 4 downto 0 );
+signal vec1_data_id : std_logic_vector( 127 downto 0 );
+signal vec2_data_id : std_logic_vector( 127 downto 0 );
+signal vec3_data_id : std_logic_vector( 127 downto 0 );
 
 --signals from execute 
 signal alu1_output_ex : STD_LOGIC_VECTOR (31 downto 0);
@@ -206,11 +208,14 @@ signal s_value_1_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal s_value_2_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal s_value_3_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal value_2_ex_display : STD_LOGIC_VECTOR (15 downto 0);
-signal source1_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal vec_we_ex : std_logic;
-signal source_2_ex : std_logic_vector (3 downto 0);
+signal source_2_ex : std_logic_vector (31 downto 0);
 signal vec3_ex : STD_LOGIC_VECTOR (127 downto 0);
 signal address_2_ex : std_logic_vector (3 downto 0);
+signal vec1_data_ex : std_logic_vector( 127 downto 0 );
+signal vec2_data_ex : std_logic_vector( 127 downto 0 );
+signal vec3_data_ex : std_logic_vector( 127 downto 0 );
+signal vecDM_en_ex : std_logic;
 
 ----signals connected to data memory
 signal write_enable_dm : std_logic;
@@ -228,7 +233,7 @@ signal alu4_output_wb : STD_LOGIC_VECTOR (31 downto 0);
 signal is_float_wb : std_logic;
 signal is_ml_wb : std_logic;
 signal vec_dest_element_wb : std_logic_vector( 3 downto 0 );
-signal vd_value_wb_id : std_logic_vector( 127 downto 0 );
+ signal vec_we_wb : std_logic;
 
 --signals in between write back and instruction decode
  signal destination_value_wb_id : STD_LOGIC_VECTOR (31 downto 0);
@@ -291,6 +296,7 @@ id_stage: instruction_decode
 	    a_select => a_select_id_ex,
        	b_select => b_select_id_ex,
 	    conditional_opcode => conditional_opcode_id_ex,
+        uncond_branch => uncond_branch_id_ex,
        	source_1 => s_value_1_id,
 		source_2 => s_value_2_id,
 		source_3 => s_value_3_id,
@@ -318,11 +324,12 @@ exe_stage : execution_stage
         vec1_data => vec1_data_ex,
         vec2_data => vec2_data_ex,
         vec3_data => vec3_data_ex,
-        vreg_wen => vreg_wen_id_ex,
+        vreg_wen => vec_reg_en_id_ex,
         vreg_wen_forward => vec_we_ex,
         vDM_wen => vecDM_en_id_ex,
-        vDM_wen_forward => vDM_wen_forward_ex,
+        vDM_wen_forward => vecDM_en_ex,
         conditional_opcode => conditional_opcode_id_ex,
+        uncond_branch => uncond_branch_id_ex,
         pc_in => pc_id_ex,
         a_select => a_select_id_ex,
         b_select => b_select_id_ex,
@@ -330,10 +337,9 @@ exe_stage : execution_stage
         alu_opcode => opcode_id_ex,
         opclass_in => opclass_id_ex, 
         opclass_out => opclass_out_ex,
-        source1_out => source1_ex,
         a_sel_out => a_select_ex_control ,
         b_sel_out => b_select_ex_control,
-        dest_ad_in => destination_address_id_ex,
+        dest_ad_in => source_3_id,
         dest_ad_out => destination_address_out_ex,
         branch_condition => branch_condition_ex_control,
         pc_out => pc_ex,
@@ -348,10 +354,10 @@ exe_stage : execution_stage
         vec3_out => vec3_ex,
         address_2 => source_2_id(3 downto 0),
         address_2_out => address_2_ex,
-        source_2_out => source_2_ex
+        source2_out => source_2_ex
 	   );
 
-stage_dm : data_memory
+stage_dm : data_mem
   	PORT MAP (clka => clk ,
    	wea(0) => write_enable_dm,
    	addra => alu1_output_ex(9 DOWNTO 0),
@@ -451,8 +457,8 @@ process (instruction_if_id) begin
     end if;
 end process;
 
-writing_data_mem_process : process (vDM_wen_forward_ex, address_2_ex, vec3_ex, source1_ex) begin
-   if vDM_wen_forward_ex = '1' then  -- value taken from the vector register
+writing_data_mem_process : process (vecDM_en_ex, address_2_ex, vec3_ex, source_2_ex) begin
+   if vecDM_en_ex = '1' then  -- value taken from the vector register
        if address_2_ex(3) = '1' then -- storing value from 4th element
            mem_in_dm <= vec3_ex( 127 downto 96 );
        elsif address_2_ex(2) = '1' then -- storing value from 3rd element
@@ -463,7 +469,7 @@ writing_data_mem_process : process (vDM_wen_forward_ex, address_2_ex, vec3_ex, s
            mem_in_dm <= vec3_ex( 31 downto 0 );
        end if;
    else -- value taken from the register file for intger/float stores
-       mem_in_dm <= source1_ex;
+       mem_in_dm <= source_2_ex;
    end if;
 end process;
 
@@ -505,22 +511,24 @@ data_hazards_3 : process ( s_value_3_id, consecutive_data_hazard_3_control , alu
 	 end if;
 end process;
 
-vector_hazards_1 : process ( vec1_data_id, non_consecutive_data_hazard_1_control, vd_value_wb_id, load_hazard_1_control, mem_out_dm_wb, con_vd_hazard_1_control, alu1_output_ex, alu2_output_ex, alu3_output_ex, alu4_output_ex ) begin
+vector_hazards_1 : process ( vec1_data_id, non_consecutive_data_hazard_1_control, vd_value_wb_id, 
+            vec_load_hazard_1_control, mem_out_dm_wb, con_vd_hazard_1_control, alu1_output_ex, 
+            alu2_output_ex, alu3_output_ex, alu4_output_ex ) begin
     
     vec1_data_ex <= vec1_data_id;
     if non_consecutive_data_hazard_1_control = '1' then 
        vec1_data_ex <= vd_value_wb_id;
     end if;
-    if load_hazard_1_control(0) = '1' then
+    if vec_load_hazard_1_control(0) = '1' then
         vec1_data_ex(31 downto 0) <= mem_out_dm_wb;
     end if;
-    if load_hazard_1_control(1) = '1' then
+    if vec_load_hazard_1_control(1) = '1' then
         vec1_data_ex(63 downto 32) <= mem_out_dm_wb;
     end if;
-    if load_hazard_1_control(2) = '1' then
+    if vec_load_hazard_1_control(2) = '1' then
         vec1_data_ex(95 downto 64) <= mem_out_dm_wb;
     end if;
-    if load_hazard_1_control(3) = '1' then
+    if vec_load_hazard_1_control(3) = '1' then
         vec1_data_ex(127 downto 96) <= mem_out_dm_wb;
     end if;
 	if con_vd_hazard_1_control ='1' then 
@@ -530,21 +538,23 @@ vector_hazards_1 : process ( vec1_data_id, non_consecutive_data_hazard_1_control
         vec1_data_ex(127 downto 96) <= alu4_output_ex;
 	end if;
 end process;
-vector_hazards_2 : process ( vec2_data_id, non_consecutive_data_hazard_2_control, vd_value_wb_id, load_hazard_2_control, mem_out_dm_wb, con_vd_hazard_2_control, alu1_output_ex, alu2_output_ex, alu3_output_ex, alu4_output_ex ) begin
+vector_hazards_2 : process ( vec2_data_id, non_consecutive_data_hazard_2_control, vd_value_wb_id, 
+        vec_load_hazard_2_control, mem_out_dm_wb, con_vd_hazard_2_control, alu1_output_ex, alu2_output_ex, 
+        alu3_output_ex, alu4_output_ex ) begin
 	vec2_data_ex <= vec2_data_id;
     if non_consecutive_data_hazard_2_control = '1' then 
        vec2_data_ex <= vd_value_wb_id;
     end if;
-    if load_hazard_2_control(0) = '1' then
+    if vec_load_hazard_2_control(0) = '1' then
         vec2_data_ex(31 downto 0) <= mem_out_dm_wb;
     end if;
-    if load_hazard_2_control(1) = '1' then
+    if vec_load_hazard_2_control(1) = '1' then
         vec2_data_ex(63 downto 32) <= mem_out_dm_wb;
     end if;
-    if load_hazard_2_control(2) = '1' then
+    if vec_load_hazard_2_control(2) = '1' then
         vec2_data_ex(95 downto 64) <= mem_out_dm_wb;
     end if;
-    if load_hazard_2_control(3) = '1' then
+    if vec_load_hazard_2_control(3) = '1' then
         vec2_data_ex(127 downto 96) <= mem_out_dm_wb;
     end if;
 	if con_vd_hazard_2_control ='1' then 
@@ -554,21 +564,23 @@ vector_hazards_2 : process ( vec2_data_id, non_consecutive_data_hazard_2_control
         vec2_data_ex(127 downto 96) <= alu4_output_ex;
 	end if;
 end process;
-vector_hazards_3 : process ( vec3_data_id, non_consecutive_data_hazard_3_control, vd_value_wb_id, load_hazard_3_control, mem_out_dm_wb, con_vd_hazard_3_control, alu1_output_ex, alu2_output_ex, alu3_output_ex, alu4_output_ex ) begin
+vector_hazards_3 : process ( vec3_data_id, non_consecutive_data_hazard_3_control, vd_value_wb_id, 
+        vec_load_hazard_3_control, mem_out_dm_wb, con_vd_hazard_3_control, alu1_output_ex, alu2_output_ex, 
+        alu3_output_ex, alu4_output_ex ) begin
     vec3_data_ex <= vec3_data_id;
     if non_consecutive_data_hazard_3_control = '1' then 
        vec3_data_ex <= vd_value_wb_id;
     end if;
-    if load_hazard_3_control(0) = '1' then
+    if vec_load_hazard_3_control(0) = '1' then
         vec3_data_ex(31 downto 0) <= mem_out_dm_wb;
     end if;
-    if load_hazard_3_control(1) = '1' then
+    if vec_load_hazard_3_control(1) = '1' then
         vec3_data_ex(63 downto 32) <= mem_out_dm_wb;
     end if;
-    if load_hazard_3_control(2) = '1' then
+    if vec_load_hazard_3_control(2) = '1' then
         vec3_data_ex(95 downto 64) <= mem_out_dm_wb;
     end if;
-    if load_hazard_3_control(3) = '1' then
+    if vec_load_hazard_3_control(3) = '1' then
         vec3_data_ex(127 downto 96) <= mem_out_dm_wb;
     end if;
 	if con_vd_hazard_3_control ='1' then 
