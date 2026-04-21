@@ -21,7 +21,7 @@ end comparator;
 architecture Behavioral of comparator is
 begin
 process (rst, clk) begin
-	if rst = '1' then
+	if rst = '0' then
 		branch_condition <= '0';
 	elsif rising_edge(clk) then
 		if uncond_branch = '1' then

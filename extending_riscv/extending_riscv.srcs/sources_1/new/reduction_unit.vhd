@@ -94,7 +94,7 @@ begin
     variable op1_fp, op2_fp, op3_fp, op4_fp, op5_fp, temp_flt : signed(55 downto 0);
     
     begin
-        if rst = '1' then
+        if rst = '0' then
             result <= (others => '0');
         elsif rising_edge(clk) then
             if en = '1' then

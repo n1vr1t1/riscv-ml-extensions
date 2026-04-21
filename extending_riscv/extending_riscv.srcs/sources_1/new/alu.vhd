@@ -96,7 +96,7 @@ variable multiply_result: STD_LOGIC_VECTOR(63 downto 0) := ( others => '0' ); --
     variable op1_fp, op2_fp, op3_fp : signed(55 downto 0); -- for floating point operations
     variable mul_fp : signed(111 downto 0); -- to store the result of floating point multiplication
 begin
-    if rst = '1' then
+    if rst = '0' then
         alu_output <= (others => '0');
     elsif rising_edge(clk) then
         if en = '0' then -- disables the alu (used by the extra alu for vector operations)
