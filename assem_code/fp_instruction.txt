@@ -1,0 +1,206 @@
+_start:
+        li      gp, 0
+        li      sp, 1024
+        li      ra, 0
+        li      t0, 0
+        li      t1, 0
+        li      t2, 0
+        li      s0, 0
+        li      s1, 0
+        li      a0, 0
+        li      a1, 0
+        li      a2, 0
+        li      a3, 0
+        li      a4, 0
+        li      a5, 0
+        li      a6, 0
+        li      a7, 0
+        li      s2, 0
+        li      s3, 0
+        li      s4, 0
+        li      s5, 0
+        li      s6, 0
+        li      s7, 0
+        li      s8, 0
+        li      s9, 0
+        li      s10, 0
+        li      s11, 0
+        li      t3, 0
+        li      t4, 0
+        li      t5, 0
+        li      t6, 0
+        j       main
+
+vi_add(float*):
+        addi    sp,sp,-80
+        sw      ra,76(sp)
+        sw      s0,72(sp)
+        addi    s0,sp,80
+        sw      a0,-68(s0)
+        sw      zero,-20(s0)
+        j       .L2
+.L3:
+        lw      a5,-20(s0)
+        slli    a5,a5,2
+        lw      a4,-68(s0)
+        add     a5,a4,a5
+        flw     fa5,0(a5)
+        flw     fa4,40(gp)
+        fadd.s  fa5,fa5,fa4
+        lw      a4,-20(s0)
+        addi    a5,s0,-60
+        slli    a4,a4,2
+        add     a5,a4,a5
+        fsw     fa5,0(a5)
+        lw      a5,-20(s0)
+        addi    a5,a5,1
+        sw      a5,-20(s0)
+.L2:
+        lw      a4,-20(s0)
+        li      a5,9
+        ble     a4,a5,.L3
+        nop
+        lw      ra,76(sp)
+        lw      s0,72(sp)
+        addi    sp,sp,80
+        jr      ra
+vv_add(float*, float*):
+        addi    sp,sp,-80
+        sw      ra,76(sp)
+        sw      s0,72(sp)
+        addi    s0,sp,80
+        sw      a0,-68(s0)
+        sw      a1,-72(s0)
+        sw      zero,-20(s0)
+        j       .L6
+.L7:
+        lw      a5,-20(s0)
+        slli    a5,a5,2
+        lw      a4,-68(s0)
+        add     a5,a4,a5
+        flw     fa4,0(a5)
+        lw      a5,-20(s0)
+        slli    a5,a5,2
+        lw      a4,-72(s0)
+        add     a5,a4,a5
+        flw     fa5,0(a5)
+        fadd.s  fa5,fa4,fa5
+        lw      a4,-20(s0)
+        addi    a5,s0,-60
+        slli    a4,a4,2
+        add     a5,a4,a5
+        fsw     fa5,0(a5)
+        lw      a5,-20(s0)
+        addi    a5,a5,1
+        sw      a5,-20(s0)
+.L6:
+        lw      a4,-20(s0)
+        li      a5,9
+        ble     a4,a5,.L7
+        nop
+        lw      ra,76(sp)
+        lw      s0,72(sp)
+        addi    sp,sp,80
+        jr      ra
+vx_add(float*):
+        addi    sp,sp,-96
+        sw      ra,92(sp)
+        sw      s0,88(sp)
+        addi    s0,sp,96
+        sw      a0,-84(s0)
+        li      a5,100
+        sw      a5,-28(s0)
+        sw      zero,-20(s0)
+        j       .L10
+.L11:
+        lw      a5,-20(s0)
+        slli    a5,a5,2
+        lw      a4,-84(s0)
+        add     a5,a4,a5
+        flw     fa4,0(a5)
+        lw      a5,-28(s0)
+        fcvt.s.w        fa5,a5
+        fadd.s  fa5,fa4,fa5
+        lw      a4,-20(s0)
+        addi    a5,s0,-72
+        slli    a4,a4,2
+        add     a5,a4,a5
+        fsw     fa5,0(a5)
+        lw      a5,-20(s0)
+        addi    a5,a5,1
+        sw      a5,-20(s0)
+.L10:
+        lw      a4,-20(s0)
+        li      a5,9
+        ble     a4,a5,.L11
+        addi    a5,s0,-72
+        mv      a1,a5
+        lw      a0,-84(s0)
+        call    vv_add(float*, float*)
+        flw     fa5,48(gp)
+        fsw     fa5,-32(s0)
+        sw      zero,-24(s0)
+        j       .L12
+.L13:
+        lw      a5,-24(s0)
+        slli    a5,a5,2
+        lw      a4,-84(s0)
+        add     a5,a4,a5
+        flw     fa4,0(a5)
+        flw     fa5,-32(s0)
+        fadd.s  fa5,fa4,fa5
+        lw      a4,-24(s0)
+        addi    a5,s0,-72
+        slli    a4,a4,2
+        add     a5,a4,a5
+        fsw     fa5,0(a5)
+        lw      a5,-24(s0)
+        addi    a5,a5,1
+        sw      a5,-24(s0)
+.L12:
+        lw      a4,-24(s0)
+        li      a5,9
+        ble     a4,a5,.L13
+        nop
+        lw      ra,92(sp)
+        lw      s0,88(sp)
+        addi    sp,sp,96
+        jr      ra
+
+main:
+        addi    sp,sp,-64
+        sw      ra,60(sp)
+        sw      s0,56(sp)
+        addi    s0,sp,64
+        lw      t3,0(gp)
+        lw      t1,4(gp)
+        lw      a7,8(gp)
+        lw      a6,12(gp)
+        lw      a0,16(gp)
+        lw      a1,20(gp)
+        lw      a2,24(gp)
+        lw      a3,28(gp)
+        lw      a4,32(gp)
+        sw      t3,-56(s0)
+        sw      t1,-52(s0)
+        sw      a7,-48(s0)
+        sw      a6,-44(s0)
+        sw      a0,-40(s0)
+        sw      a1,-36(s0)
+        sw      a2,-32(s0)
+        sw      a3,-28(s0)
+        sw      a4,-24(s0)
+        lw      a5,36(gp)
+        sw      a5,-20(s0)
+        addi    a5,s0,-56
+        mv      a0,a5
+        call    vx_add(float*)
+        addi    a5,s0,-56
+        mv      a0,a5
+        call    vi_add(float*)
+        li      a5,0
+        mv      a0,a5
+        lw      ra,60(sp)
+        lw      s0,56(sp)
+        addi    sp,sp,64
+        jr      ra
