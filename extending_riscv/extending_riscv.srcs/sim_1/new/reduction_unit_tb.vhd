@@ -114,7 +114,8 @@ begin
         operand_5 <= x"40000000"; -- 2.0
         wait until rising_edge(clk);
         wait for 2 ns;
-        assert result = x"40800000" report "Failed: VFREDMAX" severity error; -- Expected result: 4.0
+        -- Expected result: 4.0 (0x40800000)
+        assert result = x"40800000" report "Failed: VFREDMAX" severity error;
 
         wait;
     end process;
