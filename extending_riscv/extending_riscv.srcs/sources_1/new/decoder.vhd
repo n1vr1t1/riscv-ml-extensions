@@ -183,7 +183,7 @@ process (rst, clk) begin
 					operation_code <= "1100";
 					a_select <= "00";
 					b_select <= "01";
-				when "1000011" => -- fmadd
+				when "1000011" => -- fmadd (takes fs3 from destination address not funct7, unlike the implementation online)
 					a_select <= "00";
 					b_select <= "00";
 					fpu_en <= '1';
@@ -506,7 +506,7 @@ process (rst, clk) begin
 								when others => -- vfmacc.vv (001)
 									b_select <= "10";
 							end case;
-						when "010010" => -- vfcvt
+						when "010010" => -- vfcvt (uses source address 2 to determine the type of conversion instead of source address 1)
 							fpu_en <= '1';
 							b_select <= "10";
 							if address_2(1) = '1' then -- xxx1x
