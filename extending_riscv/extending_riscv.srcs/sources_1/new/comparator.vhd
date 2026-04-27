@@ -41,13 +41,13 @@ process (rst, clk) begin
 						branch_condition <= '1';
 					end if;
 				when "010" => -- branch if less than or equal
-					if signed(operand_1) < signed(operand_2) then
+					if signed(operand_1) <= signed(operand_2) then
 						branch_condition <= '1';
 					else
 						branch_condition <= '0';
 					end if;
 				when "011" => -- branch if greater than
-					if signed(operand_1) >= signed(operand_2) then
+					if signed(operand_1) > signed(operand_2) then
 						branch_condition <= '1';
 					else
 						branch_condition <= '0';
