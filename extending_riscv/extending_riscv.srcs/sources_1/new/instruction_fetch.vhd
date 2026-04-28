@@ -53,7 +53,7 @@ ifs_pc :program_counter
 ifs_mem : instruction_memory
     PORT MAP( clka => clk,
             wea(0) => '0' ,
-            addra => std_logic_vector( instruction_addr( 11 downto 2 )) ,
+            addra => instruction_addr( 11 downto 2 ) ,
             dina => "00000000000000000000000000000000" ,
             douta => instruction_signal );
 

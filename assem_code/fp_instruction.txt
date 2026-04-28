@@ -1,206 +1,221 @@
-_start:
-        li      gp, 0
-        li      sp, 1024
-        li      ra, 0
-        li      t0, 0
-        li      t1, 0
-        li      t2, 0
-        li      s0, 0
-        li      s1, 0
-        li      a0, 0
-        li      a1, 0
-        li      a2, 0
-        li      a3, 0
-        li      a4, 0
-        li      a5, 0
-        li      a6, 0
-        li      a7, 0
-        li      s2, 0
-        li      s3, 0
-        li      s4, 0
-        li      s5, 0
-        li      s6, 0
-        li      s7, 0
-        li      s8, 0
-        li      s9, 0
-        li      s10, 0
-        li      s11, 0
-        li      t3, 0
-        li      t4, 0
-        li      t5, 0
-        li      t6, 0
-        j       main
 
-vi_add(float*):
-        addi    sp,sp,-80
-        sw      ra,76(sp)
-        sw      s0,72(sp)
-        addi    s0,sp,80
-        sw      a0,-68(s0)
-        sw      zero,-20(s0)
-        j       .L2
-.L3:
-        lw      a5,-20(s0)
-        slli    a5,a5,2
-        lw      a4,-68(s0)
-        add     a5,a4,a5
-        flw     fa5,0(a5)
-        flw     fa4,40(gp)
-        fadd.s  fa5,fa5,fa4
-        lw      a4,-20(s0)
-        addi    a5,s0,-60
-        slli    a4,a4,2
-        add     a5,a4,a5
-        fsw     fa5,0(a5)
-        lw      a5,-20(s0)
-        addi    a5,a5,1
-        sw      a5,-20(s0)
-.L2:
-        lw      a4,-20(s0)
-        li      a5,9
-        ble     a4,a5,.L3
-        nop
-        lw      ra,76(sp)
-        lw      s0,72(sp)
-        addi    sp,sp,80
-        jr      ra
-vv_add(float*, float*):
-        addi    sp,sp,-80
-        sw      ra,76(sp)
-        sw      s0,72(sp)
-        addi    s0,sp,80
-        sw      a0,-68(s0)
-        sw      a1,-72(s0)
-        sw      zero,-20(s0)
-        j       .L6
-.L7:
-        lw      a5,-20(s0)
-        slli    a5,a5,2
-        lw      a4,-68(s0)
-        add     a5,a4,a5
-        flw     fa4,0(a5)
-        lw      a5,-20(s0)
-        slli    a5,a5,2
-        lw      a4,-72(s0)
-        add     a5,a4,a5
-        flw     fa5,0(a5)
-        fadd.s  fa5,fa4,fa5
-        lw      a4,-20(s0)
-        addi    a5,s0,-60
-        slli    a4,a4,2
-        add     a5,a4,a5
-        fsw     fa5,0(a5)
-        lw      a5,-20(s0)
-        addi    a5,a5,1
-        sw      a5,-20(s0)
-.L6:
-        lw      a4,-20(s0)
-        li      a5,9
-        ble     a4,a5,.L7
-        nop
-        lw      ra,76(sp)
-        lw      s0,72(sp)
-        addi    sp,sp,80
-        jr      ra
-vx_add(float*):
-        addi    sp,sp,-96
-        sw      ra,92(sp)
-        sw      s0,88(sp)
-        addi    s0,sp,96
-        sw      a0,-84(s0)
-        li      a5,100
-        sw      a5,-28(s0)
-        sw      zero,-20(s0)
-        j       .L10
-.L11:
-        lw      a5,-20(s0)
-        slli    a5,a5,2
-        lw      a4,-84(s0)
-        add     a5,a4,a5
-        flw     fa4,0(a5)
-        lw      a5,-28(s0)
-        fcvt.s.w        fa5,a5
-        fadd.s  fa5,fa4,fa5
-        lw      a4,-20(s0)
-        addi    a5,s0,-72
-        slli    a4,a4,2
-        add     a5,a4,a5
-        fsw     fa5,0(a5)
-        lw      a5,-20(s0)
-        addi    a5,a5,1
-        sw      a5,-20(s0)
-.L10:
-        lw      a4,-20(s0)
-        li      a5,9
-        ble     a4,a5,.L11
-        addi    a5,s0,-72
-        mv      a1,a5
-        lw      a0,-84(s0)
-        call    vv_add(float*, float*)
-        flw     fa5,48(gp)
-        fsw     fa5,-32(s0)
-        sw      zero,-24(s0)
-        j       .L12
-.L13:
-        lw      a5,-24(s0)
-        slli    a5,a5,2
-        lw      a4,-84(s0)
-        add     a5,a4,a5
-        flw     fa4,0(a5)
-        flw     fa5,-32(s0)
-        fadd.s  fa5,fa4,fa5
-        lw      a4,-24(s0)
-        addi    a5,s0,-72
-        slli    a4,a4,2
-        add     a5,a4,a5
-        fsw     fa5,0(a5)
-        lw      a5,-24(s0)
-        addi    a5,a5,1
-        sw      a5,-24(s0)
-.L12:
-        lw      a4,-24(s0)
-        li      a5,9
-        ble     a4,a5,.L13
-        nop
-        lw      ra,92(sp)
-        lw      s0,88(sp)
-        addi    sp,sp,96
-        jr      ra
+## _start
+00000193, # addi gp, zero, 0 
+ffc00113, # addi sp, zero, 4092
+00000093, # addi ra, zero, 0
+00000293, # addi t0, zero, 0
+00000313, # addi t1, zero, 0
+00000393, # addi t2, zero, 0
+00000413, # addi s0, zero, 0
+00000493, # addi s1, zero, 0
+00000513, # addi a0, zero, 0
+00000593, # addi a1, zero, 0
+00000613, # addi a2, zero, 0
+00000693, # addi a3, zero, 0
+00000713, # addi a4, zero, 0
+00000793, # addi a5, zero, 0
+00000813, # addi a6, zero, 0
+00000893, # addi a7, zero, 0
+00000913, # addi s2, zero, 0
+00000993, # addi s3, zero, 0
+00000a13, # addi s4, zero, 0
+00000a93, # addi s5, zero, 0
+00000b13, # addi s6, zero, 0
+00000b93, # addi s7, zero, 0
+00000c13, # addi s8, zero, 0
+00000c93, # addi s9, zero, 0
+00000d13, # addi s10, zero, 0
+00000d93, # addi s11, zero, 0
+00000e13, # addi t3, zero, 0
+00000e93, # addi t4, zero, 0
+00000f13, # addi t5, zero, 0
+00000f93, # addi t6, zero, 0
+20c0006f, # j main
 
-main:
-        addi    sp,sp,-64
-        sw      ra,60(sp)
-        sw      s0,56(sp)
-        addi    s0,sp,64
-        lw      t3,0(gp)
-        lw      t1,4(gp)
-        lw      a7,8(gp)
-        lw      a6,12(gp)
-        lw      a0,16(gp)
-        lw      a1,20(gp)
-        lw      a2,24(gp)
-        lw      a3,28(gp)
-        lw      a4,32(gp)
-        sw      t3,-56(s0)
-        sw      t1,-52(s0)
-        sw      a7,-48(s0)
-        sw      a6,-44(s0)
-        sw      a0,-40(s0)
-        sw      a1,-36(s0)
-        sw      a2,-32(s0)
-        sw      a3,-28(s0)
-        sw      a4,-24(s0)
-        lw      a5,36(gp)
-        sw      a5,-20(s0)
-        addi    a5,s0,-56
-        mv      a0,a5
-        call    vx_add(float*)
-        addi    a5,s0,-56
-        mv      a0,a5
-        call    vi_add(float*)
-        li      a5,0
-        mv      a0,a5
-        lw      ra,60(sp)
-        lw      s0,56(sp)
-        addi    sp,sp,64
-        jr      ra
+## vi_add (float*)
+fb010113, # addi sp, sp, -80
+04112623, # sw ra, 76(sp)
+04812423, # sw s0, 72(sp)
+05010413, # addi s0, sp, 80
+faa42e23, # sw a0, -68(s0)
+fe042623, # sw zero, -20(s0)
+04c0006f, # j .L2
+
+## .L3
+fec42783, # lw a5, -20(s0)
+00000013, # nop 
+00279793, # slli a5, a5, 2
+fbc42703, # lw a4, -68(s0)
+00000013, # nop
+00f707b3, # add a5, a4, a5
+0007a587, # flw fa1, 0(a5)
+0281a607, # flw fa2, 40(gp)
+00000013, # nop
+00c5f853, # fadd.s fa6, fa1, fa2
+fec42703, # lw a4, -20(s0)
+fc440793, # addi a5, s0, -60
+00271713, # slli a4, a4, 2
+00f707b3, # add a5, a4, a5
+0107a027, # fsw fa6, 0(a5)
+fec42783, # lw a5, -20(s0)
+00000013, # nop
+00178793, # addi a5, a5, 1
+fef42623, # sw a5, -20(s0)
+
+## .L2
+fec42703, # lw a4, -20(s0)
+00900793, # li a5, 9
+FAF724E3, # ble a4, a5, .L3
+04c12083, # lw ra, 76(sp)
+04812403, # lw s0, 72(sp)
+05010113, # addi sp, sp, 80
+1f80006f, # jr ra // or 1f40006f
+
+## vv_add (float*, float*)
+fb010113, # addi sp, sp, -80
+04112623, # sw ra, 76(sp)
+04812423, # sw s0, 72(sp)
+05010413, # addi s0, sp, 80
+faa42e23, # sw a0, -68(s0)
+fab42c23, # sw a1, -72(s0)
+fe042623, # sw zero, -20(s0)
+0540006f, # j .L6
+
+## .L7
+fec42783, # lw a5, -20(s0)
+fbc42703, # lw a4, -68(s0)
+00279793, # slli a5, a5, 2
+00f707b3, # add a5, a4, a5
+0007a587, # flw fa1, 0(a5)
+fec42783, # lw a5, -20(s0)
+fb842703, # lw a4, -72(s0)
+00279793, # slli a5, a5, 2
+00f707b3, # add a5, a4, a5
+0007a607, # flw fa2, 0(a5)
+00000013, # nop
+00c5f853, # fadd.s fa6, fa1, fa2
+fec42703, # lw a4, -20(s0)
+fc440793, # addi a5, s0, -60
+00271713, # slli a4, a4, 2
+00f707b3, # add a5, a4, a5
+0107a027, # fsw fa6, 0(a5)
+fec42783, # lw a5, -20(s0)
+00000013, # nop
+00178793, # addi a5, a5, 1
+fef42623, # sw a5, -20(s0)
+
+## .L6
+fec42703, # lw a4, -20(s0)
+00900793, # li a5, 9
+FAF720E3, # ble a4, a5, .L7
+04c12083, # lw ra, 76(sp)
+04812403, # lw s0, 72(sp)
+05010113, # addi sp, sp, 80
+0840006f, # jr ra
+
+## vx_add (float*)
+fa010113, # addi sp, sp, -96
+04112e23, # sw ra, 92(sp)
+04812c23, # sw s0, 88(sp)
+06010413, # addi s0, sp, 96
+faa42623, # sw a0, -84(s0)
+06400793, # li a5, 100
+fef42223, # sw a5, -28(s0)
+fe042623, # sw zero, -20(s0)
+0480006f, # j .L10
+
+## .L11
+fec42783, # lw a5, -20(s0)
+fac42703, # lw a4, -84(s0)
+00279793, # slli a5, a5, 2
+00f707b3, # add a5, a4, a5
+0007a587, # flw fa1, 0(a5)
+fe442783, # lw a5, -28(s0)
+00000013, # nop
+d007f653, # fcvt.s.w fa2, a5
+00c5f853, # fadd.s fa6, fa1, fa2
+fec42703, # lw a4, -20(s0)
+fb840793, # addi a5, s0, -72
+00271713, # slli a4, a4, 2
+00f707b3, # add a5, a4, a5
+0107a027, # fsw fa6, 0(a5)
+fec42783, # lw a5, -20(s0)
+00000013, # nop
+00178793, # addi a5, a5, 1
+fef42623, # sw a5, -20(s0)
+
+## .L10
+fec42703, # lw a4, -20(s0)
+00900793, # li a5, 9
+FAF726E3, # ble a4, a5, .L11
+fb840593, # addi a1, s0, -72
+fac42503, # lw a0, -84(s0)
+eedff0ef, # jal ra, vv_add
+0301a787, # flw fa5, 48(gp)
+00000013, # nop
+fef42027, # fsw fa5, -32(s0)
+fe042423, # sw zero, -24(s0)
+0440006f, # j .L12
+
+## .L13
+fe842783, # lw a5, -24(s0)
+fac42703, # lw a4, -84(s0)
+00279793, # slli a5, a5, 2
+00f707b3, # add a5, a4, a5
+0007a587, # flw fa1, 0(a5)
+fe042607, # flw fa2, -32(s0)
+00000013, # nop
+00c5f853, # fadd.s fa6, fa1, fa2
+fe842703, # lw a4, -24(s0)
+fb840793, # addi a5, s0, -72
+00271713, # slli a4, a4, 2
+00f707b3, # add a5, a4, a5
+0107a027, # fsw fa6, 0(a5)
+fe842783, # lw a5, -24(s0)
+00000013, # nop
+00178793, # addi a5, a5, 1
+fef42423, # sw a5, -24(s0)
+
+## .L12
+fe842703, # lw a4, -24(s0)
+00900793, # li a5, 9
+FAF728E3, # ble a4, a5, .L13
+05c12083, # lw ra, 92(sp)
+05812403, # lw s0, 88(sp)
+06010113, # addi sp, sp, 96
+0680006f, # jr ra
+
+## main
+fc010113, # addi sp, sp, -64
+02112e23, # sw ra, 60(sp)
+02812c23, # sw s0, 56(sp)
+04010413, # addi s0, sp, 64
+0001ae03, # lw t3, 0(gp)
+0041a303, # lw t1, 4(gp)
+0081a883, # lw a7, 8(gp)
+00c1a803, # lw a6, 12(gp)
+0101a503, # lw a0, 16(gp)
+0141a583, # lw a1, 20(gp)
+0181a603, # lw a2, 24(gp)
+01c1a683, # lw a3, 28(gp)
+0201a703, # lw a4, 32(gp)
+0241a783, # lw a5, 36(gp)
+fdc42423, # sw t3, -56(s0)
+fc642623, # sw t1, -52(s0)
+fd142823, # sw a7, -48(s0)
+fd042a23, # sw a6, -44(s0)
+fca42c23, # sw a0, -40(s0)
+fcb42e23, # sw a1, -36(s0)
+fec42023, # sw a2, -32(s0)
+fed42223, # sw a3, -28(s0)
+fee42423, # sw a4, -24(s0)
+fef42623, # sw a5, -20(s0)
+fc840513, # addi a0, s0, -56
+ea1ff0ef, # jal ra, vx_add
+fc840513, # addi a0, s0, -56
+d85ff0ef, # jal ra, vi_add 
+00000513, # li a0, 0
+03c12083, # lw ra, 60(sp)
+03812403, # lw s0, 56(sp)
+04010113, # addi sp, sp, 64
+fe000ee3, # beqz x0, x0, -4

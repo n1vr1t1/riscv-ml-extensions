@@ -207,7 +207,6 @@ signal opclass_out_ex : STD_LOGIC_VECTOR (4 downto 0);
 signal s_value_1_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal s_value_2_ex : STD_LOGIC_VECTOR (31 downto 0);
 signal s_value_3_ex : STD_LOGIC_VECTOR (31 downto 0);
-signal value_2_ex_display : STD_LOGIC_VECTOR (15 downto 0);
 signal vec_we_ex : std_logic;
 signal source_2_ex : std_logic_vector (31 downto 0);
 signal vec3_ex : STD_LOGIC_VECTOR (127 downto 0);
@@ -230,18 +229,16 @@ signal alu1_output_wb : STD_LOGIC_VECTOR (31 downto 0);
 signal alu2_output_wb : STD_LOGIC_VECTOR (31 downto 0);
 signal alu3_output_wb : STD_LOGIC_VECTOR (31 downto 0);
 signal alu4_output_wb : STD_LOGIC_VECTOR (31 downto 0);
-signal is_float_wb : std_logic;
-signal is_ml_wb : std_logic;
 signal vec_dest_element_wb : std_logic_vector( 3 downto 0 );
- signal vec_we_wb : std_logic;
+signal vec_we_wb : std_logic;
 
 --signals in between write back and instruction decode
- signal destination_value_wb_id : STD_LOGIC_VECTOR (31 downto 0);
- signal destination_address_wb_id : STD_LOGIC_VECTOR(4 DOWNTO 0); 
- signal write_enable_wb_id : std_logic;
- signal vec_we_wb_id : std_logic;
- signal vd_value_wb_id : std_logic_vector( 127 downto 0 );
- signal vec_dest_element_wb_id : std_logic_vector( 3 downto 0 );
+signal destination_value_wb_id : STD_LOGIC_VECTOR (31 downto 0);
+signal destination_address_wb_id : STD_LOGIC_VECTOR(4 DOWNTO 0); 
+signal write_enable_wb_id : std_logic;
+signal vec_we_wb_id : std_logic;
+signal vd_value_wb_id : std_logic_vector( 127 downto 0 );
+signal vec_dest_element_wb_id : std_logic_vector( 3 downto 0 );
 
 ----signals connected to control unit
 signal flush_control : std_logic;
@@ -360,7 +357,7 @@ exe_stage : execution_stage
 stage_dm : data_mem
   	PORT MAP (clka => clk ,
    	wea(0) => write_enable_dm,
-   	addra => alu1_output_ex(9 DOWNTO 0),
+   	addra => alu1_output_ex(11 DOWNTO 2),
    	dina => mem_in_dm,
    	douta => mem_out_dm_wb);
     	
