@@ -509,12 +509,12 @@ data_hazards_3 : process ( s_value_3_id, consecutive_data_hazard_3_control , alu
 	 end if;
 end process;
 
-vector_hazards_1 : process ( vec1_data_id, non_consecutive_data_hazard_1_control, vd_value_wb_id, 
+vector_hazards_1 : process ( vec1_data_id, vec_data_hazard_1_control, vd_value_wb_id, 
             vec_load_hazard_1_control, mem_out_dm_wb, con_vd_hazard_1_control, alu1_output_ex, 
             alu2_output_ex, alu3_output_ex, alu4_output_ex ) begin
     
     vec1_data_ex <= vec1_data_id;
-    if non_consecutive_data_hazard_1_control = '1' then 
+    if vec_data_hazard_1_control = '1' then 
        vec1_data_ex <= vd_value_wb_id;
     end if;
     if vec_load_hazard_1_control(0) = '1' then
@@ -536,11 +536,11 @@ vector_hazards_1 : process ( vec1_data_id, non_consecutive_data_hazard_1_control
         vec1_data_ex(127 downto 96) <= alu4_output_ex;
 	end if;
 end process;
-vector_hazards_2 : process ( vec2_data_id, non_consecutive_data_hazard_2_control, vd_value_wb_id, 
+vector_hazards_2 : process ( vec2_data_id, vec_data_hazard_2_control, vd_value_wb_id, 
         vec_load_hazard_2_control, mem_out_dm_wb, con_vd_hazard_2_control, alu1_output_ex, alu2_output_ex, 
         alu3_output_ex, alu4_output_ex ) begin
 	vec2_data_ex <= vec2_data_id;
-    if non_consecutive_data_hazard_2_control = '1' then 
+    if vec_data_hazard_2_control = '1' then 
        vec2_data_ex <= vd_value_wb_id;
     end if;
     if vec_load_hazard_2_control(0) = '1' then
@@ -562,11 +562,11 @@ vector_hazards_2 : process ( vec2_data_id, non_consecutive_data_hazard_2_control
         vec2_data_ex(127 downto 96) <= alu4_output_ex;
 	end if;
 end process;
-vector_hazards_3 : process ( vec3_data_id, non_consecutive_data_hazard_3_control, vd_value_wb_id, 
+vector_hazards_3 : process ( vec3_data_id, vec_data_hazard_3_control, vd_value_wb_id, 
         vec_load_hazard_3_control, mem_out_dm_wb, con_vd_hazard_3_control, alu1_output_ex, alu2_output_ex, 
         alu3_output_ex, alu4_output_ex ) begin
     vec3_data_ex <= vec3_data_id;
-    if non_consecutive_data_hazard_3_control = '1' then 
+    if vec_data_hazard_3_control = '1' then 
        vec3_data_ex <= vd_value_wb_id;
     end if;
     if vec_load_hazard_3_control(0) = '1' then
