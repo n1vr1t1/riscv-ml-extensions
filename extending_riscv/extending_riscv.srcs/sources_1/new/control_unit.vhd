@@ -45,10 +45,10 @@ entity control_unit is
 end control_unit;
 
 architecture Behavioral of control_unit is
-signal nonvec_instructions : std_logic;
+signal non_consecutive_vec_instr : std_logic;
 signal vec_instructions : std_logic;
 begin
-nonvec_instructions <= vec_en_if and vec_en_ex;
+non_consecutive_vec_instr <= vec_en_if and vec_en_ex;
 vec_instructions <= vec_en_id and vec_en_ex;
 
 flushing: process (branch_condition, a_select, b_select) begin
@@ -64,125 +64,75 @@ begin
         load_hazard_1 <= '0';
         load_hazard_2 <= '0';
         load_hazard_3 <= '0';
+        vec_data_hazard_1 <= '0';
+        vec_data_hazard_2 <= '0';
+        vec_data_hazard_3 <= '0';
+        vec_load_hazard_1 <= (others => '0');
+        vec_load_hazard_2 <= (others => '0');
+        vec_load_hazard_3 <= (others => '0');
     elsif rising_edge (clk) then
-        if rd_ex /= "00000" then
-            if opclass = "00100" then --operation
-                load_hazard_1 <= '0';
-                load_hazard_2 <= '0';
-                load_hazard_3 <= '0';
-                vec_load_hazard_1 <= (others => '0');
-                vec_load_hazard_2 <= (others => '0');
-                vec_load_hazard_3 <= (others => '0');
-                if rs1_if = rd_ex then 
-                    if (nonvec_instructions = '1') then
-                        vec_data_hazard_1 <= '1';
-                        data_hazard_1 <= '0';
-                    else
-                        data_hazard_1 <= '1' ;
-                        vec_data_hazard_1 <= '0';
-                    end if;
-                else
-                    vec_data_hazard_1 <= '0';
-                    data_hazard_1 <= '0';
+        data_hazard_1 <= '0';
+        data_hazard_2 <= '0';
+        data_hazard_3 <= '0';
+        load_hazard_1 <= '0';
+        load_hazard_2 <= '0';
+        load_hazard_3 <= '0';
+        vec_data_hazard_1 <= '0';
+        vec_data_hazard_2 <= '0';
+        vec_data_hazard_3 <= '0';
+        vec_load_hazard_1 <= (others => '0');
+        vec_load_hazard_2 <= (others => '0');
+        vec_load_hazard_3 <= (others => '0');
+        if opclass = "00100" then 
+            if (non_consecutive_vec_instr = '1') then -- vector instruction in EX stage and ID stage
+                if rs1_if = rd_ex then
+                    vec_data_hazard_1 <= '1';
                 end if;
-                if rs2_if = rd_ex then 
-                   if (nonvec_instructions = '1') then
-                        vec_data_hazard_2 <= '1';
-                        data_hazard_2 <= '0';
-                    else
-                        data_hazard_2 <= '1' ;
-                        vec_data_hazard_2 <= '0';
-                    end if;
-                else
-                    data_hazard_2 <= '0';
-                    vec_data_hazard_2 <= '0';
-                end if; 
+                if rs2_if = rd_ex then
+                    vec_data_hazard_2 <= '1';
+                end if;
                 if rs3_if = rd_ex then
-                    if (nonvec_instructions = '1') then
-                        vec_data_hazard_3 <= '1';
-                        data_hazard_3 <= '0';
-                    else
-                        data_hazard_3 <= '1' ;
-                        vec_data_hazard_3 <= '0';
-                    end if;
-                else
-                    data_hazard_3 <= '0';
-                    vec_data_hazard_3 <= '0';
+                    vec_data_hazard_3 <= '1';
                 end if;
-            elsif opclass = "00001" then --load
-                data_hazard_1 <= '0';
-                data_hazard_2 <= '0';
-                data_hazard_3 <= '0';
-                vec_data_hazard_1 <= '0';
-                vec_data_hazard_2 <= '0';
-                vec_data_hazard_3 <= '0';
-                if rs1_if = rd_ex then 
-                    if (nonvec_instructions = '1') then
-                        vec_load_hazard_1 <= vd_element;
-                        load_hazard_1 <= '0';
-                    else
-                        load_hazard_1 <= '1' ;
-                        vec_load_hazard_1 <= (others => '0');
+            else -- non vector instructions in EX stage and ID stage
+                if rd_ex /= "00000" then
+                    if rs1_if = rd_ex then 
+                        data_hazard_1 <= '1';
                     end if;
-                else
-                    load_hazard_1 <= '0';
-                    vec_load_hazard_1 <= (others => '0');
-                end if;
-                if rs2_if = rd_ex then 
-                    if (nonvec_instructions = '1') then
-                        vec_load_hazard_2 <= vd_element;
-                        load_hazard_2 <= '0';
-                    else
-                        load_hazard_2 <= '1' ;
-                        vec_load_hazard_2 <= (others => '0');
+                    if rs2_if = rd_ex then
+                        data_hazard_2 <= '1';
                     end if;
-                else
-                    load_hazard_2 <= '0';
-                    vec_load_hazard_2 <= (others => '0');
-                end if;
-                if rs3_if = rd_ex then 
-                    if (nonvec_instructions = '1') then
-                        vec_load_hazard_3 <= vd_element;
-                        load_hazard_3 <= '0';
-                    else
-                        load_hazard_3 <= '1' ;
-                        vec_load_hazard_3 <= (others => '0');
+                    if rs3_if = rd_ex then
+                        data_hazard_3 <= '1';
                     end if;
-                else
-                    load_hazard_3 <= '0';
-                    vec_load_hazard_3 <= (others => '0');
+                end if; -- rd not zero
+            end if; -- vec or nonvec instructions
+        elsif opclass = "00001" then
+            if (non_consecutive_vec_instr = '1') then -- vector instruction in EX stage and ID stage
+                if rs1_if = rd_ex then
+                    vec_load_hazard_1 <= vd_element;
                 end if;
-            else --when the opcode is not operation or load
-                data_hazard_1 <= '0';
-                data_hazard_2 <= '0';
-                data_hazard_3 <= '0';
-                load_hazard_1 <= '0';
-                load_hazard_2 <= '0';
-                load_hazard_3 <= '0';
-                vec_data_hazard_1 <= '0';
-                vec_data_hazard_2 <= '0';
-                vec_data_hazard_3 <= '0';
-                vec_load_hazard_1 <= (others => '0');
-                vec_load_hazard_2 <= (others => '0');
-                vec_load_hazard_3 <= (others => '0');
-            end if;   
-        else --when rd_ex = "00000" 
-            data_hazard_1 <= '0';
-            data_hazard_2 <= '0';
-            data_hazard_3 <= '0';
-            load_hazard_1 <= '0';
-            load_hazard_2 <= '0';
-            load_hazard_3 <= '0';
-            vec_data_hazard_1 <= '0';
-            vec_data_hazard_2 <= '0';
-            vec_data_hazard_3 <= '0';
-            vec_load_hazard_1 <= (others => '0');
-            vec_load_hazard_2 <= (others => '0');
-            vec_load_hazard_3 <= (others => '0');
-
-        end if;
-    --no else
-    end if;
+                if rs2_if = rd_ex then
+                    vec_load_hazard_2 <= vd_element;
+                end if;
+                if rs3_if = rd_ex then
+                    vec_load_hazard_3 <= vd_element;
+                end if;
+            else -- non vector instructions in EX stage and ID stage
+                if rd_ex /= "00000" then
+                    if rs1_if = rd_ex then
+                        load_hazard_1 <= '1';
+                    end if;
+                    if rs2_if = rd_ex then
+                        load_hazard_2 <= '1';
+                    end if;
+                    if rs3_if = rd_ex then
+                        load_hazard_3 <= '1';
+                    end if;
+                end if; -- rd not zero
+            end if; -- vec or nonvec instructions
+        end if; -- opclass load or operation
+    end if; -- rst, rising_edge clk
 end process;
 data_fowarding_operation : process (rst, rs1_id, rs2_id, rs3_id, rd_ex, opclass, vec_instructions) 
 begin
@@ -194,59 +144,36 @@ begin
         con_vd_hazard_2 <= '0';
         con_vd_hazard_3 <= '0';
     else
-        if rd_ex /= "00000" then
-            if opclass = "00100" then
-                if rs1_id = rd_ex then 
-                    if (vec_instructions = '1') then
-                        con_vd_hazard_1 <= '1';
-                        con_data_hazard_1 <= '0';
-                    else
-                        con_vd_hazard_1 <= '0';
-                        con_data_hazard_1 <= '1';
-                    end if;
-                else 
-                    con_vd_hazard_1 <= '0';
-                    con_data_hazard_1 <= '0';
+        con_data_hazard_1 <= '0';
+        con_data_hazard_2 <= '0';
+        con_data_hazard_3 <= '0';
+        con_vd_hazard_1 <= '0';
+        con_vd_hazard_2 <= '0';
+        con_vd_hazard_3 <= '0';
+        if (opclass = "00100") then
+            if (vec_instructions = '1') then
+                if rs1_id = rd_ex then
+                    con_vd_hazard_1 <= '1';
                 end if;
                 if rs2_id = rd_ex then
-                    if (vec_instructions = '1') then
-                        con_vd_hazard_2 <= '1';
-                        con_data_hazard_2 <= '0';
-                    else
-                        con_vd_hazard_2 <= '0';
-                        con_data_hazard_2 <= '1';
-                    end if;
-                else 
-                    con_vd_hazard_2 <= '0';
-                    con_data_hazard_2 <= '0';
+                    con_vd_hazard_2 <= '1';
                 end if;
                 if rs3_id = rd_ex then
-                    if (vec_instructions = '1') then
-                        con_vd_hazard_3 <= '1';
-                        con_data_hazard_3 <= '0';
-                    else
-                        con_vd_hazard_3 <= '0';
+                    con_vd_hazard_3 <= '1';
+                end if;
+            else
+                if rd_ex /= "00000" then
+                    if rs1_id = rd_ex then 
+                        con_data_hazard_1 <= '1';
+                    end if;
+                    if rs2_id = rd_ex then
+                        con_data_hazard_2 <= '1';
+                    end if;
+                    if rs3_id = rd_ex then
                         con_data_hazard_3 <= '1';
                     end if;
-                else 
-                    con_vd_hazard_3 <= '0';
-                    con_data_hazard_3 <= '0';
                 end if;
-            else 
-                con_data_hazard_1 <= '0';
-                con_data_hazard_2 <= '0';
-                con_data_hazard_3 <= '0';
-                con_vd_hazard_1 <= '0';
-                con_vd_hazard_2 <= '0';
-                con_vd_hazard_3 <= '0';
             end if;
-        else 
-            con_data_hazard_1 <= '0';
-            con_data_hazard_2 <= '0';
-            con_data_hazard_3 <= '0';
-            con_vd_hazard_1 <= '0';
-            con_vd_hazard_2 <= '0';
-            con_vd_hazard_3 <= '0';
         end if;
     end if;
 end process;

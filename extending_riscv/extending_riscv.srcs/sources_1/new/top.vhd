@@ -448,7 +448,8 @@ dm_write : process (opclass_out_ex) begin
 end process;
 
 process (instruction_if_id) begin 
-    if instruction_if_id(6 downto 0) = "1010111" then -- vector instruction
+    -- vector operation or load or store instruction
+    if instruction_if_id(6 downto 0) = "1010111" or instruction_if_id(6 downto 0) = "0000111"  or instruction_if_id(6 downto 0) = "0100111" then
             vec_en_control <= '1';
     else vec_en_control <= '0';
     end if;

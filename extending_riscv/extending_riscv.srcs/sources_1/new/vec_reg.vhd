@@ -20,7 +20,6 @@ end vec_reg;
 architecture Behavioral of vec_reg is
     type vec_file_type is array ( 0 to 31 ) of std_logic_vector( 127 downto 0 );
     signal vector_reg_file : vec_file_type;
-    signal element_data_type : std_logic_vector ( 31 downto 0 );
 begin
 
 reading_process : process ( rst, clk ) begin
