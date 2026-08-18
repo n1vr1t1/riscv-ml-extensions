@@ -13,11 +13,13 @@ entity immediate_generator is
 end immediate_generator;
 
 architecture Behavioral of immediate_generator is
+signal funct3 : std_logic_vector( 2 downto 0 );
 begin
+funct3 <= instruction( 14 downto 12 );
 process ( rst, clk )
-variable funct3 : std_logic_vector( 2 downto 0 );
+--variable funct3 : std_logic_vector( 2 downto 0 );
 begin
-    funct3 := instruction( 14 downto 12 );
+--    funct3 := instruction( 14 downto 12 );
 	if rst = '0' then 
 		immediate <= ( others => '0' );
 	elsif rising_edge( clk ) then

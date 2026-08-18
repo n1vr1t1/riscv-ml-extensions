@@ -3,7 +3,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity top is
     Port (clk : in STD_LOGIC;
-        rst : in std_logic
+        rst : in std_logic;
+        led : out std_logic
 );
 end top;
 
@@ -484,8 +485,8 @@ data_hazards_1 : process ( s_value_1_id, consecutive_data_hazard_1_control, alu1
 	 	s_value_1_ex <= s_value_1_id;
 	 end if;
 end process;
-data_hazards_2 : process ( s_value_2_id, consecutive_data_hazard_2_control , alu1_output_ex ,
-                          non_consecutive_data_hazard_2_control, destination_value_wb_id ) begin
+data_hazards_2 : process ( s_value_2_id, load_hazard_2_control, consecutive_data_hazard_2_control , alu1_output_ex ,
+                          non_consecutive_data_hazard_2_control, destination_value_wb_id, mem_out_dm_wb ) begin
 	if consecutive_data_hazard_2_control = '1' then 
 		s_value_2_ex <= alu1_output_ex;
     elsif load_hazard_2_control = '1' then
@@ -496,7 +497,7 @@ data_hazards_2 : process ( s_value_2_id, consecutive_data_hazard_2_control , alu
 	 	s_value_2_ex <= s_value_2_id;
 	 end if;
 end process;
-data_hazards_3 : process ( s_value_3_id, consecutive_data_hazard_3_control , alu1_output_ex ,
+data_hazards_3 : process ( s_value_3_id, consecutive_data_hazard_3_control , alu1_output_ex , load_hazard_3_control, mem_out_dm_wb, 
                           non_consecutive_data_hazard_3_control, destination_value_wb_id ) begin
     if consecutive_data_hazard_3_control = '1' then 
 		s_value_3_ex <= alu1_output_ex;

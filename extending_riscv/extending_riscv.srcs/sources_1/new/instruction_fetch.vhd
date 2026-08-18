@@ -20,9 +20,7 @@ signal instruction_signal : STD_LOGIC_VECTOR( 31 downto 0 ); -- output of the in
 
 COMPONENT instruction_memory IS
   PORT( clka : IN STD_LOGIC;
-        wea : IN STD_LOGIC_VECTOR( 0 DOWNTO 0 );
         addra : IN STD_LOGIC_VECTOR( 9 DOWNTO 0 );
-        dina : IN STD_LOGIC_VECTOR( 31 DOWNTO 0 );
         douta : OUT STD_LOGIC_VECTOR( 31 DOWNTO 0 ));
 END COMPONENT;
  component program_counter is
@@ -52,9 +50,7 @@ ifs_pc :program_counter
         	
 ifs_mem : instruction_memory
     PORT MAP( clka => clk,
-            wea(0) => '0' ,
-            addra => instruction_addr( 11 downto 2 ) ,
-            dina => "00000000000000000000000000000000" ,
+            addra => instruction_addr( 11 downto 2 ),
             douta => instruction_signal );
 
 pc_sign_extension: sign_extention_pc
