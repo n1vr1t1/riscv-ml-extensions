@@ -16,7 +16,7 @@ The design is targeted and validated on the AMD Xilinx Artix-7 FPGA (xc7a100tcg3
 ## Getting Started
 ### Prerequisites
 - Synthesis and Simulation Tools: AMD Xilinx Vivado Design Suite (2020.2>)
-- Software Toolchain: You can use [https://godbolt.org/](Compiler Explorer) to compile your high level code into assembly, which then needs to be converted to fit COE file standards.
+- Software Toolchain: You can use [Compiler Explorer](https://godbolt.org/) to compile your high level code into assembly, which then needs to be converted to fit COE file standards.
 
 ### Loading the project
 1. Open Vivado and create a project targetting the `sc7a100tcsg324-1`
