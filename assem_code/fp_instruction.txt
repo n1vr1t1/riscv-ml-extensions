@@ -3,6 +3,7 @@
 00000193, # addi gp, zero, 0 
 ffc00113, # addi sp, zero, 4092
 00000093, # addi ra, zero, 0
+00000213, # addi tp, zero, 0
 00000293, # addi t0, zero, 0
 00000313, # addi t1, zero, 0
 00000393, # addi t2, zero, 0

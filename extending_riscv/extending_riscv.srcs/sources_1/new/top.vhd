@@ -590,4 +590,8 @@ vector_hazards_3 : process ( vec3_data_id, vec_data_hazard_3_control, vd_value_w
 	end if;
 end process;
 
+process (alu1_output_ex) begin
+    led <= alu1_output_ex(0);
+end process;
+
 end Behavioral;

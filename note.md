@@ -1,2 +1,37 @@
 - NOP is encoded as ADDI x0, x0, 0.
 - LUI = [-524288, 524287]
+-   settings for instruction memory:
+    - Block memory generator
+    - Interface type : Native (Do not tick thw box to geenrate address interface ith 32 bits)
+    - Memory type : Single port RAM
+    - No ECC
+    - Single bit error injection
+    - Disable byte write enable
+    - Byte size : 9 bits
+    - Algorithm : minimum area
+    - Read/write width : 32
+    - Read/write depth : 1024
+    - Operating mode : Read first
+    - Enable port type : always enabled
+    - No primitive/core output registers
+    - No RSTA Pin
+-   settings for data memory:
+    - Block memory generator
+    - Interface type : Native (Do not tick thw box to geenrate address interface ith 32 bits)
+    - Memory type : Single port RAM
+    - No ECC
+    - Single bit error injection
+    - Disable byte write enable
+    - Byte size : 9 bits
+    - Algorithm : minimum area
+    - Read/write width : 32
+    - Read/write depth : 1024
+    - Operating mode : Read first
+    - Enable port type : always enabled
+    - No primitive/core output registers
+    - No RSTA Pin 
+- load instruction and then a normal instruction that needs the loaded instruction is not possible. A nop or another instruction needs to be inbetween
+- comparisions in the alu assume the operands are signed but all other operatons assume the operands are unsigned
+- comparator assume the operands are unsigned
+- set operations with unsigned operands is not implemented
+- shift arithmetic is not implemented
